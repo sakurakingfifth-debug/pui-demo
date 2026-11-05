@@ -25,15 +25,20 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: 安装 Android SDK
-        uses: android-actions/setup-android@v3
-
-      # compileSdk 37 不是 runner 预装的，必须自己拉。
-      # 包名是 platforms;android-37.0（带小版本号），不是 android-37。
+      # 不用 android-actions/setup-android：ubuntu-latest 镜像本来就预装了 Android SDK
+      # （ANDROID_SDK_ROOT + cmdline-tools），那个动作反而是多一层可能挂掉的依赖。
+      # compileSdk 37 不是预装的，所以还是要自己补 platform。
+      # 包名是 platforms;android-37.0（带小版本号），写 android-37 会找不到。
       - name: 安装 platform 37
         run: |
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          echo "SDK_ROOT=$SDK"
+          export PATH="$SDK/cmdline-tools/latest/bin:$PATH"
+          sdkmanager --version
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "platforms;android-37.0" "platform-tools"
+          sdkmanager --install "platforms;android-37.0"
+          echo "--- 已安装的平台 ---"
+          ls "$SDK/platforms"
 
       - uses: gradle/actions/setup-gradle@v4
 
