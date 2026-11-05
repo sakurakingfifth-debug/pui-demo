@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 启动画面与窗口底色 · 暗色：和 App 深色主题的纯黑底一致 -->
+<resources>
+    <color name="pui_splash_bg">#FF000000</color>
+    <color name="pui_window_bg">#FF000000</color>
+</resources>

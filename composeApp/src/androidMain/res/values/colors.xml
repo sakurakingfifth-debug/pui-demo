@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 启动画面与窗口底色 · 亮色。暗色见 values-night/colors.xml -->
+<resources>
+    <!-- 启动画面背景（Android 12+ 由 windowSplashScreenBackground 使用） -->
+    <color name="pui_splash_bg">#FFF0F1F3</color>
+    <!-- 普通窗口底色：避免启动画面退场时闪一下白 -->
+    <color name="pui_window_bg">#FFF0F1F3</color>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- API 24–30 没有 SplashScreen API，用窗口背景自己拼一个：底色 + 居中图标 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/pui_splash_bg" />
+    <item
+        android:width="96dp"
+        android:height="96dp"
+        android:drawable="@drawable/pui_splash_glyph"
+        android:gravity="center" />
+</layer-list>

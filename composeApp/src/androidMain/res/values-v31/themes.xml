@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ 的 SplashScreen API：背景色 + 带动画的图标 -->
+<resources>
+    <style name="Theme.PuiDemo.Splash" parent="Theme.PuiDemo">
+        <item name="android:windowBackground">@color/pui_window_bg</item>
+        <item name="android:windowSplashScreenBackground">@color/pui_splash_bg</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/pui_splash_icon</item>
+        <item name="android:windowSplashScreenAnimationDuration">620</item>
+    </style>
+</resources>

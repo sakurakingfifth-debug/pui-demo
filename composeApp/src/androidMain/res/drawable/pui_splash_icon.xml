@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ 的启动图标：矢量 + 缩放动画（系统在 splash 期间播放） -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/pui_splash_glyph">
+    <target
+        android:name="glyph"
+        android:animation="@animator/pui_splash_scale" />
+</animated-vector>

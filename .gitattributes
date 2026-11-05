@@ -1,0 +1,17 @@
+# 换行统一：源码一律 LF，只有 Windows 脚本用 CRLF。
+# 不加这条的话，Windows 上提交会按 core.autocrlf 转 CRLF，
+# 别人在 macOS/Linux 上 clone 下来的 gradlew 会带 ^M，执行时报 bad interpreter。
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+gradlew text eol=lf
+
+# 二进制，别让 git 去猜
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.so binary

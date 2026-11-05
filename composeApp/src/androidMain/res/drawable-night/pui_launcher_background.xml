@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自适应图标背景 · 暗色：中性灰线性渐变，参考 OPPO 图标的底（可见区顶 #2E2E2E → 底 #121212）。
+     注意：自适应图标只有中间 72dp 是可见的（外圈 18dp 留给视差），
+     所以渐变按「整张 108dp 从 #343434 到 #0C0C0C」来铺，
+     可见区（y 18~90）截到约 #353535 → #0D0D0D。
+     参考图（Play 商店图标）实测可见区是 46 → 18；这里刻意做得比它略陡一点，
+     因为启动器 / 图标缓存经常把这类低对比渐变压平，实测我们的图标只渲染出 34 → 22。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="0"
+                android:endX="54"
+                android:endY="108">
+                <item
+                    android:color="#FF3E3E3E"
+                    android:offset="0" />
+                <item
+                    android:color="#FF060606"
+                    android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
