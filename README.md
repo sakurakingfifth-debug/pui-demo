@@ -1,10 +1,36 @@
 # PUI Demo
 
+[![CI](https://github.com/sakurakingfifth-debug/pui-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/sakurakingfifth-debug/pui-demo/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-BE3455.svg)](LICENSE)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.20-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.9.0-4285F4)](https://www.jetbrains.com/compose-multiplatform/)
+[![Android](https://img.shields.io/badge/Android-minSdk%2024%20%7C%20targetSdk%2037-3DDC84?logo=android&logoColor=white)](#)
+
 PUI 设计系统的**演示 App**：把主题、令牌、图标、卡片、行、控件按展柜的方式铺开，
 改完样式直接跑起来对照。用 Compose Multiplatform 写，一份 `commonMain` 同时出 Android APK 和桌面预览。
 
 视觉基调：**浅灰底 + 纯白卡片 + 非凡洋红（PANTONE 18-1750 Viva Magenta，`#BE3455`）主色**，圆角克制（卡片 20dp）、字阶克制，
 接近 ColorOS 原生设置页，而不是 Material 3 Expressive 那种「大字大圆角」。
+
+## 截图
+
+四个页面（浅色）：
+
+| 组件 | 示例 | 颜色 | 设置 |
+|---|---|---|---|
+| <img src="docs/screenshots/gallery.png" width="200"> | <img src="docs/screenshots/example.png" width="200"> | <img src="docs/screenshots/colors.png" width="200"> | <img src="docs/screenshots/settings.png" width="200"> |
+
+底部浮窗的三种形态：
+
+| 底部下沉 | 居中 | 全屏 |
+|---|---|---|
+| <img src="docs/screenshots/sheet-bottom.png" width="200"> | <img src="docs/screenshots/sheet-center.png" width="200"> | <img src="docs/screenshots/fullscreen.png" width="200"> |
+
+英文界面：
+
+<img src="docs/screenshots/example-en.png" width="260">
+
+> 以上都是 `./gradlew :composeApp:renderPreview` 离屏渲染出来的，不是真机截图。
 
 ---
 
@@ -281,3 +307,16 @@ zipalign -c -P 16 -v 4 app-debug.apk   # 末尾应输出 Verification successful
 
 原来的 11 个图标、配色、字阶、圆角、开关、行骨架**数值完全一致**，
 从 `PuiTheme` 迁过来的页面观感不会变。
+
+---
+
+## 八、许可证与素材
+
+代码以 **MIT** 发布，见 [LICENSE](LICENSE)。
+
+`composeApp/src/*/resources/icons/` 下的图标（`icons_solar.txt`、`icons_iconsax.txt`，
+共 2000+ 条路径数据）与 `PuiIcons.kt` 里的 46 个手绘图标**均为本项目作者绘制**，
+随项目一同以 MIT 发布，可自由使用、修改、再分发。
+
+图标数据是纯文本路径（`名称|透明度@SVG path|...`），没有位图资源，
+所以仓库里不涉及字体或图片的授权问题。
