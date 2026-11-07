@@ -81,7 +81,8 @@ fun LanguageScreen(
         ) {
             // 不加分组标题：页面标题已经写了「语言」，再加一行就是重复
             PuiGroup(title = null) {
-                PuiLanguage.entries.forEachIndexed { index, language ->
+                // 只列已翻译的；未翻译的占位项在枚举里，但不显示
+                PuiLanguage.shown.forEachIndexed { index, language ->
                     val isSystem = language == PuiLanguage.System
                     PuiRadioRow(
                         // 一律显示本族名：英文用户找 "English"，日本用户找 "日本語"，
@@ -90,7 +91,7 @@ fun LanguageScreen(
                         subtitle = if (isSystem) "" else language.tag,
                         selected = state.language == language,
                         onClick = { state.language = language },
-                        showDivider = index != PuiLanguage.entries.lastIndex
+                        showDivider = index != PuiLanguage.shown.lastIndex
                     )
                 }
             }

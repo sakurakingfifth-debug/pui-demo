@@ -563,34 +563,61 @@ val LocalStrings = staticCompositionLocalOf { PuiZh }
  * @param tag BCP-47 标签，「跟随系统」时用来匹配；`System` 自己不需要。
  * @param endonym 本族名（English 而不是「英语」）—— 语言列表里一律显示母语写法，
  *   用户在自己的语言里也找得到它，不用先看懂当前界面语言。
+ * @param implemented 文案是否已翻译。**false 的不会出现在语言页里** ——
+ *   列一个点进去还是英文的选项，比不列更糟。占位是为了让「还要加哪些」在代码里看得见。
  */
-enum class PuiLanguage(val tag: String, val endonym: String) {
-    System("", ""),
-    Chinese("zh-CN", "简体中文"),
-    TraditionalTaiwan("zh-TW", "繁體中文（台灣）"),
-    TraditionalHongKong("zh-HK", "繁體中文（香港）"),
-    English("en", "English"),
-    Japanese("ja", "日本語")
+enum class PuiLanguage(val tag: String, val endonym: String, val implemented: Boolean) {
+    System("", "", true),
+    Chinese("zh-CN", "简体中文", true),
+    CantoneseCn("yue-Hans-CN", "粤语（中国）", true),
+    TraditionalTaiwan("zh-TW", "繁體中文（台灣）", true),
+    TraditionalHongKong("zh-HK", "繁體中文（香港）", true),
+    CantoneseHk("yue-Hant-HK", "粵語（廣東話）", true),
+    English("en", "English", true),
+    Japanese("ja", "日本語", true),
+    Korean("ko", "한국어", true),
+    German("de", "Deutsch", true),
+
+    // 以下已占位、文案待补（语言页里不显示）
+    French("fr", "Français", false),
+    Spanish("es", "Español", false),
+    Italian("it", "Italiano", false),
+    Portuguese("pt", "Português", false),
+    Russian("ru", "Русский", false),
+    Ukrainian("uk", "Українська", false),
+    Polish("pl", "Polski", false),
+    Dutch("nl", "Nederlands", false),
+    Danish("da", "Dansk", false),
+    Norwegian("nb", "Norsk", false),
+    Latin("la", "Latina", false),
+    Turkish("tr", "Türkçe", false),
+    Vietnamese("vi", "Tiếng Việt", false),
+    Arabic("ar", "العربية", false),
+    Hindi("hi", "हिन्दी", false);
+
+    companion object {
+        /** 语言页里真正列出来的那些。 */
+        val shown: List<PuiLanguage> get() = entries.filter { it.implemented }
+    }
 }
 
-/**
- * 解析成实际文案。
- *
- * 「跟随系统」用 Compose 的 `Locale.current` —— 它在 Android 和桌面都拿得到系统语言，
- * 不用自己写 expect/actual。只有中文走中文，其余一律英文（比反过来安全：
- * 英文用户至少能读懂，中文用户看到英文界面也不算崩）。
- */
 /** 当前语言的显示名：跟随系统时显示「跟随系统」，其余一律显示本族名。 */
 fun PuiLanguage.displayName(strings: PuiStrings): String =
     if (this == PuiLanguage.System) strings.languageSystem else endonym
 
 fun resolveStrings(language: PuiLanguage, systemTag: String): PuiStrings = when (language) {
     PuiLanguage.Chinese -> PuiZh
+    PuiLanguage.CantoneseCn -> PuiYueCn
     PuiLanguage.TraditionalTaiwan -> PuiZhTw
     PuiLanguage.TraditionalHongKong -> PuiZhHk
+    PuiLanguage.CantoneseHk -> PuiYueHk
     PuiLanguage.English -> PuiEn
     PuiLanguage.Japanese -> PuiJa
+    PuiLanguage.Korean -> PuiKo
+    PuiLanguage.German -> PuiDe
+    // 还没翻译的语言先在枚举里占位，走到这里按英文兜底
     PuiLanguage.System -> resolveByTag(systemTag)
+    else -> PuiEn
 }
 
 /**
@@ -602,12 +629,19 @@ fun resolveStrings(language: PuiLanguage, systemTag: String): PuiStrings = when 
 private fun resolveByTag(tag: String): PuiStrings {
     val t = tag.lowercase()
     return when {
+        // 粤语（yue）要排在 zh 前面判断：系统标签可能写成 zh-yue 或 yue-Hant-HK
+        t.startsWith("yue") || t.contains("yue") -> when {
+            t.contains("hant") || t.contains("hk") -> PuiYueHk
+            else -> PuiYueCn
+        }
         t.startsWith("zh") -> when {
             t.contains("hk") || t.contains("mo") -> PuiZhHk
             t.contains("tw") || t.contains("hant") -> PuiZhTw
             else -> PuiZh
         }
         t.startsWith("ja") -> PuiJa
+        t.startsWith("ko") -> PuiKo
+        t.startsWith("de") -> PuiDe
         else -> PuiEn
     }
 }

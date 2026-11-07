@@ -104,6 +104,7 @@ fun main(args: Array<String>) {
     render(outDir, "page0-full", widthDp, 5000, 1.2f, 0)
     render(outDir, "page1-full", widthDp, 2100, 1.2f, 1)
     render(outDir, "page1-en-full", widthDp, 2200, 1.2f, 1, language = PuiLanguage.English)
+    render(outDir, "page1-ko", widthDp, heightDp, density, 1, language = PuiLanguage.Korean)
     render(outDir, "page2-full", widthDp, 2200, 1.2f, 2)
     render(outDir, "page3-full", widthDp, 1500, 1.2f, 3)
 
