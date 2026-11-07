@@ -6,6 +6,8 @@
 [![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.9.0-4285F4)](https://www.jetbrains.com/compose-multiplatform/)
 [![Android](https://img.shields.io/badge/Android-minSdk%2024%20%7C%20targetSdk%2037-3DDC84?logo=android&logoColor=white)](#)
 
+我懒，所以是大肥鱼写的。
+
 PUI 设计系统的**演示 App**：把主题、令牌、图标、卡片、行、控件按展柜的方式铺开，
 改完样式直接跑起来对照。用 Compose Multiplatform 写，一份 `commonMain` 同时出 Android APK 和桌面预览。
 
