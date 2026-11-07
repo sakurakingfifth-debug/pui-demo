@@ -45,8 +45,8 @@ android {
         applicationId = "com.panl.puidemo"
         minSdk = 24
         targetSdk = 37
-        versionCode = 108
-        versionName = "1.0.107"
+        versionCode = 109
+        versionName = "1.0.108"
     }
 
     compileOptions {

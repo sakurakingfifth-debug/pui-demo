@@ -320,7 +320,10 @@ fun ArgbPickerDialog(
                                 }
                             }
                             .clip(RoundedCornerShape(10.dp))
-                        .background(Color(hsvToArgb(hue, sat, value, alphaByte)))
+                        // 替身是「卡片还没长出来时占位的那块」—— 它必须和卡片同色。
+                        // 用当前选中的颜色会变成一条大红条（从调色盘行打开时特别明显），
+                        // 用卡片底色才是「白（暗色下黑）慢慢展开」。
+                        .background(scheme.surfaceContainerLowest)
                 )
             }
         }
