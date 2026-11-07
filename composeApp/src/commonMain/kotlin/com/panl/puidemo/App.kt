@@ -125,6 +125,24 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
     // 放在外壳而不是详情页里，是因为**背景的压暗和模糊也要跟着它走**；
     // 由详情页自己持有的话外壳拿不到这个值，两边只能各跑一条近似曲线，收尾会错开。
     val iconProgress = remember { Animatable(0f) }
+
+    // 语言页的展开进度：和图标集同一套「从被点的矩形长到全屏」
+    val languageProgress = remember { Animatable(0f) }
+    LaunchedEffect(state.languagePageOpen) {
+        if (state.languagePageOpen) {
+            languageProgress.snapTo(0f)
+            languageProgress.animateTo(1f, tween(durationMillis = 420, easing = FastOutSlowInEasing))
+        }
+    }
+
+    fun closeLanguagePage() {
+        if (!state.languagePageOpen) return
+        scope.launch {
+            // 先播完退场再关，否则页面瞬间消失，看不出是缩回那一行
+            languageProgress.animateTo(0f, tween(durationMillis = 300, easing = FastOutLinearInEasing))
+            state.languagePageOpen = false
+        }
+    }
     var iconClosing by remember { mutableStateOf(false) }
 
     // 底部浮窗的进场进度。同样放在外壳：浮窗只盖住屏幕下半截，
@@ -211,7 +229,11 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
         Box(
             Modifier
                 .fillMaxSize()
-                .graphicsLayer { alpha = 1f - 0.38f * iconProgress.value.coerceIn(0f, 1f) }
+                .graphicsLayer {
+                    // 语言页和图标集共用这一层压暗，取两者较大的进度
+                    val p = maxOf(iconProgress.value, languageProgress.value).coerceIn(0f, 1f)
+                    alpha = 1f - 0.38f * p
+                }
                 // 前 45% 就糊到最大：等到详情页真正铺满，背景早就虚透了
                 .puiRealtimeBlur(
                     progress = {
@@ -290,9 +312,11 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
         if (state.languagePageOpen) {
             LanguageScreen(
                 state = state,
+                origin = state.languageRowRect,
+                progress = languageProgress,
                 topBlur = state.blurEnabled,
                 topBlurRadius = (state.topBlurPx / density).dp,
-                onClose = { state.languagePageOpen = false }
+                onClose = { closeLanguagePage() }
             )
         }
 
@@ -393,6 +417,9 @@ internal fun sheetBackdropBlur(progress: Float): Float =
 
     /** 语言页是否打开。纯 UI 状态，不落盘。 */
     var languagePageOpen by mutableStateOf(false)
+
+    /** 「语言」那一行在根坐标里的矩形，语言页从它展开、也缩回它。 */
+    var languageRowRect by mutableStateOf(Rect.Zero)
 
     /** 界面语言。同样存枚举名。 */
     private var languageName by stringPref(prefs, "language", PuiLanguage.System.name)

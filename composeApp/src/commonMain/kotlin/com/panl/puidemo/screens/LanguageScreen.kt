@@ -23,7 +23,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -52,6 +57,10 @@ import com.panl.puidemo.PuiLanguage
 @Composable
 fun LanguageScreen(
     state: PuiDemoState,
+    /** 被点的那一行在根坐标里的矩形 —— 页面从它长出来，退场再缩回去。 */
+    origin: Rect,
+    /** 展开进度，由外壳持有：背景的压暗要跟它跑同一条曲线。 */
+    progress: Animatable<Float, AnimationVector1D>,
     topBlur: Boolean,
     topBlurRadius: Dp,
     onClose: () -> Unit
@@ -59,15 +68,47 @@ fun LanguageScreen(
     val scheme = MaterialTheme.colorScheme
     val strings = LocalStrings.current
     val statusH = rememberStatusBarHeight()
+    val density = LocalDensity.current
     val navH = rememberNavigationBarHeight()
     val blurH = rememberPuiTopBlurHeight()
 
     PuiBackHandler(enabled = true) { onClose() }
 
-    Box(Modifier.fillMaxSize().background(scheme.background)) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(scheme.background)
+            // 共享元素展开：把整页裁成一个从 origin 长到全屏的圆角矩形。
+            // 内容始终按全屏排版，只是可见区域在变 —— 所以文字不会跟着被拉伸。
+            .graphicsLayer {
+                val p = progress.value.coerceIn(0f, 1f)
+                if (p >= 0.999f) {
+                    // 完全展开后不要再裁：整屏圆角矩形的抗锯齿裁剪在 Skia 里会退化成
+                    // 一层全屏遮罩，滚动时每帧白花几毫秒
+                    clip = false
+                } else {
+                    val hz = (p / 0.3f).coerceIn(0f, 1f)
+                    // 圆角前 70% 保持 20dp，最后 30% 收到 0 —— 写成 20*(1-p) 的话
+                    // 展开到一半就成了直角，看着像块生硬的方板
+                    val k = ((1f - p) / 0.3f).coerceIn(0f, 1f)
+                    val radiusPx = 20f * (k * k * (3f - 2f * k)) * density.density
+                    clip = true
+                    shape = WindowShape(
+                        Rect(
+                            lerp(origin.left, 0f, hz),
+                            lerp(origin.top, 0f, p),
+                            lerp(origin.right, size.width, hz),
+                            lerp(origin.bottom, size.height, p)
+                        ),
+                        radiusPx
+                    )
+                }
+            }
+    ) {
         Column(
             Modifier
                 .fillMaxSize()
+                .graphicsLayer { alpha = (progress.value / 0.5f).coerceIn(0f, 1f) }
                 // 内容从顶栏下面开始，往上滚的部分会被渐进模糊吃掉 —— 和图标集详情页同一套
                 .then(
                     if (topBlur) {
@@ -135,3 +176,29 @@ fun LanguageScreen(
 }
 
 private val TOP_BAR_HEIGHT = 56.dp
+
+/**
+ * 「语言」行首的徽章。
+ *
+ * 图标集是手绘路径，塞一个「文」字进去要描四笔，形状还不一定对；
+ * 直接用文字渲染更准，也能跟着主色走。
+ */
+@Composable
+fun LanguageBadge() {
+    val accent = MaterialTheme.colorScheme.primary
+    Box(
+        Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(accent.copy(alpha = 0.16f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "文",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = accent
+        )
+    }
+}
+

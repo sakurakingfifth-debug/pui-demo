@@ -232,7 +232,14 @@ fun main(args: Array<String>) {
         PuiTheme(darkTheme = false) {
             val prefs = rememberPuiPrefs()
             val st = remember { PuiDemoState(prefs) }
-            LanguageScreen(state = st, topBlur = true, topBlurRadius = 18.dp, onClose = {})
+            LanguageScreen(
+                state = st,
+                origin = Rect(16f * density, 420f * density, (412f - 16f) * density, 500f * density),
+                progress = remember { Animatable(1f) },
+                topBlur = true,
+                topBlurRadius = 18.dp,
+                onClose = {}
+            )
         }
     }
 

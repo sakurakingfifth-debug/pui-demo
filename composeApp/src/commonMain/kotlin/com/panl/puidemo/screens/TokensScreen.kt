@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import com.panl.pui.PuiCard
 import com.panl.pui.PuiGroup
 import com.panl.pui.PuiListRow
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import com.panl.pui.PuiIcon
 import com.panl.pui.PuiNavContentPadding
 import com.panl.pui.PuiPageTitle
@@ -154,8 +156,11 @@ fun TokensScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
         // 语言：独立页面。选项一多，分段控件会挤成一条看不清的小格子，
         // 所以这里只留一行入口，点进去是一个完整页面
         PuiGroup(t.groupLanguage) {
+            // 包一层只为量位置：语言页要从这一行「长」出来
+            Box(Modifier.onGloballyPositioned { state.languageRowRect = it.boundsInRoot() }) {
             PuiListRow(
                 icon = null,
+                leading = { LanguageBadge() },
                 // 分组标题已经写了「语言」，这行直接显示当前选中的语言，
                 // 副标题补 BCP-47 标签（跟随系统时 tag 是空串，自然不显示）
                 title = state.language.displayName(s),
@@ -164,6 +169,7 @@ fun TokensScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
                 showChevron = true,
                 onClick = { state.languagePageOpen = true }
             )
+            }
         }
 
         // 导航栏外观：模糊半径 + 玻璃不透明度

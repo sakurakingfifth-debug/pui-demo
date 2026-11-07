@@ -272,6 +272,8 @@ fun PuiSliderRow(
 @Composable
 fun PuiListRow(
     icon: PuiIcon?,
+    /** 自定义行首图形。给了就盖过 [icon] —— 用来放字母/字符徽章这类图标集里没有的东西。 */
+    leading: (@Composable () -> Unit)? = null,
     title: String,
     subtitle: String = "",
     showDivider: Boolean = true,
@@ -296,7 +298,10 @@ fun PuiListRow(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (icon != null) {
+            if (leading != null) {
+                Box(Modifier.alpha(dim)) { leading() }
+                Spacer(Modifier.width(14.dp))
+            } else if (icon != null) {
                 PuiRowIcon(icon, Modifier.alpha(dim))
                 Spacer(Modifier.width(14.dp))
             }
