@@ -591,9 +591,9 @@ enum class PuiLanguage(val tag: String, val endonym: String, val implemented: Bo
     Norwegian("nb", "Norsk", true),
     Latin("la", "Latina", true),
     Turkish("tr", "Türkçe", true),
-    Vietnamese("vi", "Tiếng Việt", false),
-    Arabic("ar", "العربية", false),
-    Hindi("hi", "हिन्दी", false);
+    Vietnamese("vi", "Tiếng Việt", true),
+    Arabic("ar", "العربية", true),
+    Hindi("hi", "हिन्दी", true);
 
     companion object {
         /** 语言页里真正列出来的那些。 */
@@ -604,6 +604,13 @@ enum class PuiLanguage(val tag: String, val endonym: String, val implemented: Bo
 /** 当前语言的显示名：跟随系统时显示「跟随系统」，其余一律显示本族名。 */
 fun PuiLanguage.displayName(strings: PuiStrings): String =
     if (this == PuiLanguage.System) strings.languageSystem else endonym
+
+/** 这门语言是不是从右往左排。阿拉伯语要切 `LayoutDirection.Rtl`，否则整页还是左对齐。 */
+fun resolveIsRtl(language: PuiLanguage, systemTag: String): Boolean = when (language) {
+    PuiLanguage.Arabic -> true
+    PuiLanguage.System -> systemTag.lowercase().startsWith("ar")
+    else -> false
+}
 
 fun resolveStrings(language: PuiLanguage, systemTag: String): PuiStrings = when (language) {
     PuiLanguage.Chinese -> PuiZh
@@ -627,6 +634,9 @@ fun resolveStrings(language: PuiLanguage, systemTag: String): PuiStrings = when 
     PuiLanguage.Norwegian -> PuiNb
     PuiLanguage.Latin -> PuiLa
     PuiLanguage.Turkish -> PuiTr
+    PuiLanguage.Vietnamese -> PuiVi
+    PuiLanguage.Arabic -> PuiAr
+    PuiLanguage.Hindi -> PuiHi
     // 还没翻译的语言先在枚举里占位，走到这里按英文兜底
     PuiLanguage.System -> resolveByTag(systemTag)
     else -> PuiEn
@@ -666,6 +676,9 @@ private fun resolveByTag(tag: String): PuiStrings {
         t.startsWith("nb") || t.startsWith("no") -> PuiNb
         t.startsWith("la") -> PuiLa
         t.startsWith("tr") -> PuiTr
+        t.startsWith("vi") -> PuiVi
+        t.startsWith("ar") -> PuiAr
+        t.startsWith("hi") -> PuiHi
         else -> PuiEn
     }
 }

@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import com.panl.pui.PuiBarMetrics
@@ -59,7 +61,7 @@ import com.panl.puidemo.screens.AppInstallSheet
 import com.panl.puidemo.screens.ColorScreen
 import com.panl.puidemo.screens.ExampleScreen
 import com.panl.puidemo.screens.GalleryScreen
-import com.panl.puidemo.screens.IconSetDetail
+import com.panl.puidemo.screens.IconSetDetail
 import com.panl.puidemo.screens.LanguageScreen
 import com.panl.puidemo.screens.TokensScreen
 import kotlinx.coroutines.delay
@@ -95,8 +97,15 @@ fun App(initialPage: Int = 0, darkOverride: Boolean? = null, languageOverride: P
     ) {
         // 文案在这里注入：语言只影响文字，和明暗/配色互不干扰。
         // 「跟随系统」在组合期读一次系统语言 —— 系统语言变了会触发重组（Locale 是 State）。
-        val strings = resolveStrings(languageOverride ?: state.language, Locale.current.toLanguageTag())
-        CompositionLocalProvider(LocalStrings provides strings) {
+        val sysTag = Locale.current.toLanguageTag()
+        val lang = languageOverride ?: state.language
+        val strings = resolveStrings(lang, sysTag)
+        // 阿拉伯语要把整棵树的排版方向翻成 RTL —— 只换文案的话，整页仍然左对齐
+        val dir = if (resolveIsRtl(lang, sysTag)) LayoutDirection.Rtl else LayoutDirection.Ltr
+        CompositionLocalProvider(
+            LocalStrings provides strings,
+            LocalLayoutDirection provides dir
+        ) {
             // 换明暗时整屏从中心圆形展开（accent 变化不触发，只有深浅色切换才播）
             PuiThemeReveal(key = dark, origin = state.revealOrigin) {
                 PuiDemoShell(state, initialPage)
