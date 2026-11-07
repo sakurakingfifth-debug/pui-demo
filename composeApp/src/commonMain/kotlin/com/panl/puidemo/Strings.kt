@@ -579,11 +579,11 @@ enum class PuiLanguage(val tag: String, val endonym: String, val implemented: Bo
     German("de", "Deutsch", true),
 
     // 以下已占位、文案待补（语言页里不显示）
-    French("fr", "Français", false),
-    Spanish("es", "Español", false),
+    French("fr", "Français", true),
+    Spanish("es", "Español", true),
     Italian("it", "Italiano", false),
-    Portuguese("pt", "Português", false),
-    Russian("ru", "Русский", false),
+    Portuguese("pt", "Português", true),
+    Russian("ru", "Русский", true),
     Ukrainian("uk", "Українська", false),
     Polish("pl", "Polski", false),
     Dutch("nl", "Nederlands", false),
@@ -615,6 +615,10 @@ fun resolveStrings(language: PuiLanguage, systemTag: String): PuiStrings = when 
     PuiLanguage.Japanese -> PuiJa
     PuiLanguage.Korean -> PuiKo
     PuiLanguage.German -> PuiDe
+    PuiLanguage.French -> PuiFr
+    PuiLanguage.Spanish -> PuiEs
+    PuiLanguage.Russian -> PuiRu
+    PuiLanguage.Portuguese -> PuiPt
     // 还没翻译的语言先在枚举里占位，走到这里按英文兜底
     PuiLanguage.System -> resolveByTag(systemTag)
     else -> PuiEn
@@ -642,6 +646,10 @@ private fun resolveByTag(tag: String): PuiStrings {
         t.startsWith("ja") -> PuiJa
         t.startsWith("ko") -> PuiKo
         t.startsWith("de") -> PuiDe
+        t.startsWith("fr") -> PuiFr
+        t.startsWith("es") -> PuiEs
+        t.startsWith("ru") -> PuiRu
+        t.startsWith("pt") -> PuiPt
         else -> PuiEn
     }
 }
