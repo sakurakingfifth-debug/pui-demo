@@ -74,16 +74,17 @@ fun LanguageScreen(
 
     PuiBackHandler(enabled = true) { onClose() }
 
+    // 和图标集详情页完全同构的两层：
+    //   外层裁形状 —— 从被点那行的矩形长到全屏；
+    //   内层管内容 —— 上沿跟着走（translationY），前 28% 淡入。
+    // 只做外层的话，看起来是「一块白板在放大」，不是「页面从卡片里长出来」。
     Box(
         Modifier
             .fillMaxSize()
-            .background(scheme.background)
-            // 共享元素展开：把整页裁成一个从 origin 长到全屏的圆角矩形。
-            // 内容始终按全屏排版，只是可见区域在变 —— 所以文字不会跟着被拉伸。
             .graphicsLayer {
                 val p = progress.value.coerceIn(0f, 1f)
-                if (p >= 0.999f) {
-                    // 完全展开后不要再裁：整屏圆角矩形的抗锯齿裁剪在 Skia 里会退化成
+                if (p >= 0.999f || origin.width <= 0f) {
+                    // 展开完成后不要再裁：整屏圆角矩形的抗锯齿裁剪在 Skia 里会退化成
                     // 一层全屏遮罩，滚动时每帧白花几毫秒
                     clip = false
                 } else {
@@ -105,38 +106,50 @@ fun LanguageScreen(
                 }
             }
     ) {
-        Column(
+        Box(
             Modifier
                 .fillMaxSize()
-                .graphicsLayer { alpha = (progress.value / 0.5f).coerceIn(0f, 1f) }
-                // 内容从顶栏下面开始，往上滚的部分会被渐进模糊吃掉 —— 和图标集详情页同一套
-                .then(
-                    if (topBlur) {
-                        Modifier.puiProgressiveTopBlur(height = blurH, maxRadius = topBlurRadius)
-                    } else {
-                        Modifier
-                    }
-                )
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, end = 16.dp, top = statusH + TOP_BAR_HEIGHT, bottom = navH + 16.dp)
+                .graphicsLayer {
+                    val p = progress.value.coerceIn(0f, 1f)
+                    // 上沿在哪，页面顶边就在哪 —— 内容跟着裁切框一起往上走
+                    translationY = lerp(origin.top, 0f, p)
+                    // 前 28% 淡入：p=0 时还是底下那张卡片
+                    val f = (p / 0.28f).coerceIn(0f, 1f)
+                    alpha = f * f * (3f - 2f * f)
+                }
+                .background(scheme.background)
         ) {
-            // 不加分组标题：页面标题已经写了「语言」，再加一行就是重复
-            PuiGroup(title = null) {
-                // 只列已翻译的；未翻译的占位项在枚举里，但不显示
-                PuiLanguage.shown.forEachIndexed { index, language ->
-                    val isSystem = language == PuiLanguage.System
-                    PuiRadioRow(
-                        // 一律显示本族名：英文用户找 "English"，日本用户找 "日本語"，
-                        // 不用先看懂当前界面语言才能找到自己的
-                        title = if (isSystem) strings.languageSystem else language.endonym,
-                        subtitle = if (isSystem) "" else language.tag,
-                        selected = state.language == language,
-                        onClick = { state.language = language },
-                        showDivider = index != PuiLanguage.shown.lastIndex
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    // 内容从顶栏下面开始，往上滚的部分会被渐进模糊吃掉 —— 和图标集详情页同一套
+                    .then(
+                        if (topBlur) {
+                            Modifier.puiProgressiveTopBlur(height = blurH, maxRadius = topBlurRadius)
+                        } else {
+                            Modifier
+                        }
                     )
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 16.dp, end = 16.dp, top = statusH + TOP_BAR_HEIGHT, bottom = navH + 16.dp)
+            ) {
+                // 不加分组标题：页面标题已经写了「语言」，再加一行就是重复
+                PuiGroup(title = null) {
+                    // 只列已翻译的；未翻译的占位项在枚举里，但不显示
+                    PuiLanguage.shown.forEachIndexed { index, language ->
+                        val isSystem = language == PuiLanguage.System
+                        PuiRadioRow(
+                            // 一律显示本族名：英文用户找 "English"，日本用户找 "日本語"，
+                            // 不用先看懂当前界面语言才能找到自己的
+                            title = if (isSystem) strings.languageSystem else language.endonym,
+                            subtitle = if (isSystem) "" else language.tag,
+                            selected = state.language == language,
+                            onClick = { state.language = language },
+                            showDivider = index != PuiLanguage.shown.lastIndex
+                        )
+                    }
                 }
             }
-        }
 
         // 顶栏：透明底，内容从下面穿过去；只有返回键和标题
         Row(
@@ -171,6 +184,7 @@ fun LanguageScreen(
                 fontWeight = FontWeight.SemiBold,
                 color = scheme.onSurface
             )
+        }
         }
     }
 }
