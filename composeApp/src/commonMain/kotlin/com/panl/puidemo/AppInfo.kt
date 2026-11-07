@@ -10,6 +10,6 @@ package com.panl.puidemo
  * 版本号规则：每次迭代 `+0.0.1`，`versionCode` 同步 +1。
  */
 object AppInfo {
-    const val VERSION = "1.0.112"
-    const val VERSION_CODE = 113
+    const val VERSION = "1.0.113"
+    const val VERSION_CODE = 114
 }

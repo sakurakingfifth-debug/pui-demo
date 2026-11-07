@@ -589,8 +589,8 @@ enum class PuiLanguage(val tag: String, val endonym: String, val implemented: Bo
     Dutch("nl", "Nederlands", true),
     Danish("da", "Dansk", true),
     Norwegian("nb", "Norsk", true),
-    Latin("la", "Latina", false),
-    Turkish("tr", "Türkçe", false),
+    Latin("la", "Latina", true),
+    Turkish("tr", "Türkçe", true),
     Vietnamese("vi", "Tiếng Việt", false),
     Arabic("ar", "العربية", false),
     Hindi("hi", "हिन्दी", false);
@@ -625,6 +625,8 @@ fun resolveStrings(language: PuiLanguage, systemTag: String): PuiStrings = when 
     PuiLanguage.Dutch -> PuiNl
     PuiLanguage.Danish -> PuiDa
     PuiLanguage.Norwegian -> PuiNb
+    PuiLanguage.Latin -> PuiLa
+    PuiLanguage.Turkish -> PuiTr
     // 还没翻译的语言先在枚举里占位，走到这里按英文兜底
     PuiLanguage.System -> resolveByTag(systemTag)
     else -> PuiEn
@@ -662,6 +664,8 @@ private fun resolveByTag(tag: String): PuiStrings {
         t.startsWith("nl") -> PuiNl
         t.startsWith("da") -> PuiDa
         t.startsWith("nb") || t.startsWith("no") -> PuiNb
+        t.startsWith("la") -> PuiLa
+        t.startsWith("tr") -> PuiTr
         else -> PuiEn
     }
 }
