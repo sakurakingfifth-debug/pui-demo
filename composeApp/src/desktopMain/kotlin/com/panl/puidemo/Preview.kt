@@ -227,7 +227,7 @@ fun main(args: Array<String>) {
 
     // 语言页：独立子页，出图确认顶栏和列表
     renderScene(outDir, "language-page", widthDp, heightDp, density) {
-        PuiTheme {
+        PuiTheme(darkTheme = false) {
             val prefs = rememberPuiPrefs()
             val st = remember { PuiDemoState(prefs) }
             LanguageScreen(state = st, topBlur = true, topBlurRadius = 18.dp, onClose = {})
