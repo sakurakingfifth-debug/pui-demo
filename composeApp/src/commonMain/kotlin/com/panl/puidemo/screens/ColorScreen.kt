@@ -1,5 +1,6 @@
 package com.panl.puidemo.screens
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,16 +22,25 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,33 +62,65 @@ import com.panl.puidemo.PuiDemoState
 @Composable
 fun ColorScreen(topPad: Dp, state: PuiDemoState) {
     val strings = LocalStrings.current
-    Column(
-        Modifier
-            .fillMaxSize()
-            .puiEdgeHaptic()
-            .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, top = topPad + 8.dp, bottom = PuiNavContentPadding),
-        verticalArrangement = Arrangement.spacedBy(22.dp)
-    ) {
-        PuiPageTitle(strings.color.title)
 
-        PuiGroup(strings.color.brandColor) {
-            Column(Modifier.padding(16.dp)) {
-                Text(
-                    strings.color.brandHint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(14.dp))
-                AccentPicker(state)
+    // 调色盘挂在整页的 Box 上，不放在滚动列里 —— 它是整屏浮层，
+    // 塞进 Column 会被当成一个普通子项参与排版。
+    var pickerOpen by remember { mutableStateOf(false) }
+    var swatchRect by remember { mutableStateOf(Rect.Zero) }
+    val pickerEnter = remember { Animatable(0f) }
+    // 关掉后进度必须归零，否则下次打开不会播进场
+    LaunchedEffect(pickerOpen) {
+        if (!pickerOpen) pickerEnter.snapTo(0f)
+    }
+    // 拖回默认色时存 null，而不是存一个和默认值相等的 Color ——
+    // 这样「当前：非凡洋红（默认）」那一行才不会误显示成「恢复默认」
+    val defaultArgb = PuiMagenta.toArgb()
+
+    Box(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .puiEdgeHaptic()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = topPad + 8.dp, bottom = PuiNavContentPadding),
+            verticalArrangement = Arrangement.spacedBy(22.dp)
+        ) {
+            PuiPageTitle(strings.color.title)
+
+            PuiGroup(strings.color.brandColor) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(
+                        strings.color.brandHint,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    AccentPicker(state) { rect ->
+                        swatchRect = rect
+                        pickerOpen = true
+                    }
+                }
+            }
+
+            PuiGroup(strings.color.palette) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                    PaletteBlock(strings.color.toneLight, PaletteLight)
+                    PaletteBlock(strings.color.toneSoft, PalettePowdered)
+                }
             }
         }
 
-        PuiGroup(strings.color.palette) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                PaletteBlock(strings.color.toneLight, PaletteLight)
-                PaletteBlock(strings.color.toneSoft, PalettePowdered)
-            }
+        if (pickerOpen) {
+            ArgbPickerDialog(
+                initial = state.accent?.toArgb() ?: defaultArgb,
+                origin = swatchRect,
+                enter = pickerEnter,
+                // 拖动时实时改主色（整屏立刻变色），点「取消」由弹窗自己回滚到 initial
+                onColorChange = { argb ->
+                    state.accent = if (argb == defaultArgb) null else Color(argb)
+                },
+                onDismiss = { pickerOpen = false }
+            )
         }
     }
 }
@@ -96,8 +138,10 @@ private fun accentChoices(c: ColorStrings): List<Pair<String, Color>> = listOf(
 )
 
 @Composable
-private fun AccentPicker(state: PuiDemoState) {
+private fun AccentPicker(state: PuiDemoState, onOpenPicker: (Rect) -> Unit) {
     val strings = LocalStrings.current
+    // 调色盘要从这一行「长出来」，所以得先量到它在根坐标里的位置
+    var rowRect by remember { mutableStateOf(Rect.Zero) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         accentChoices(strings.color).chunked(3).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -179,6 +223,49 @@ private fun AccentPicker(state: PuiDemoState) {
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        // 调色盘：任意色。左边用扫掠渐变点表示「什么色都有」，
+        // 右边在有自定义色时回显它的十六进制，省得再点开确认。
+        Row(
+            Modifier
+                .onGloballyPositioned { rowRect = it.boundsInRoot() }
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onOpenPicker(rowRect) }
+                .padding(vertical = 6.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                Modifier
+                    .size(16.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.sweepGradient(
+                            listOf(
+                                Color(0xFFFF3B30), Color(0xFFFFCC00), Color(0xFF34C759),
+                                Color(0xFF32ADE6), Color(0xFF5856D6), Color(0xFFAF52DE),
+                                Color(0xFFFF3B30)
+                            )
+                        )
+                    )
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                strings.color.customColor,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.weight(1f))
+            state.accent?.let {
+                Text(
+                    it.toHex(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

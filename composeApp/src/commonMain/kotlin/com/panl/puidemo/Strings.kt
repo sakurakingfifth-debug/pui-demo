@@ -147,7 +147,8 @@ class ColorStrings(
     val amber: String,
     val teal: String,
     val current: (String) -> String,
-    val reset: String
+    val reset: String,
+    val customColor: String
 )
 
 @Immutable
@@ -344,7 +345,8 @@ val PuiZh = PuiStrings(
         amber = "琥珀",
         teal = "青碧",
         current = { "当前：$it（默认）" },
-        reset = "恢复默认"
+        reset = "恢复默认",
+        customColor = "调色盘"
     ),
     install = InstallStrings(
         title = "安装应用",
@@ -502,7 +504,8 @@ val PuiEn = PuiStrings(
         amber = "Amber",
         teal = "Teal",
         current = { "Current: $it (default)" },
-        reset = "Reset to default"
+        reset = "Reset to default",
+        customColor = "Color picker"
     ),
     install = InstallStrings(
         title = "Install app",
