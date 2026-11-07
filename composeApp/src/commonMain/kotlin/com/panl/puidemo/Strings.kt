@@ -557,8 +557,21 @@ val PuiEn = PuiStrings(
  */
 val LocalStrings = staticCompositionLocalOf { PuiZh }
 
-/** 语言选项。 */
-enum class PuiLanguage { System, Chinese, English }
+/**
+ * 语言选项。
+ *
+ * @param tag BCP-47 标签，「跟随系统」时用来匹配；`System` 自己不需要。
+ * @param endonym 本族名（English 而不是「英语」）—— 语言列表里一律显示母语写法，
+ *   用户在自己的语言里也找得到它，不用先看懂当前界面语言。
+ */
+enum class PuiLanguage(val tag: String, val endonym: String) {
+    System("", ""),
+    Chinese("zh-CN", "简体中文"),
+    TraditionalTaiwan("zh-TW", "繁體中文（台灣）"),
+    TraditionalHongKong("zh-HK", "繁體中文（香港）"),
+    English("en", "English"),
+    Japanese("ja", "日本語")
+}
 
 /**
  * 解析成实际文案。
@@ -567,10 +580,36 @@ enum class PuiLanguage { System, Chinese, English }
  * 不用自己写 expect/actual。只有中文走中文，其余一律英文（比反过来安全：
  * 英文用户至少能读懂，中文用户看到英文界面也不算崩）。
  */
-fun resolveStrings(language: PuiLanguage, systemLanguage: String): PuiStrings = when (language) {
+/** 当前语言的显示名：跟随系统时显示「跟随系统」，其余一律显示本族名。 */
+fun PuiLanguage.displayName(strings: PuiStrings): String =
+    if (this == PuiLanguage.System) strings.languageSystem else endonym
+
+fun resolveStrings(language: PuiLanguage, systemTag: String): PuiStrings = when (language) {
     PuiLanguage.Chinese -> PuiZh
+    PuiLanguage.TraditionalTaiwan -> PuiZhTw
+    PuiLanguage.TraditionalHongKong -> PuiZhHk
     PuiLanguage.English -> PuiEn
-    PuiLanguage.System -> if (systemLanguage.startsWith("zh")) PuiZh else PuiEn
+    PuiLanguage.Japanese -> PuiJa
+    PuiLanguage.System -> resolveByTag(systemTag)
+}
+
+/**
+ * 「跟随系统」的匹配规则。
+ *
+ * 中文圈要先分简繁、再分港澳台 —— 系统标签可能是 `zh`、`zh-TW`、`zh-Hant-TW`、`zh-HK`，
+ * 只判断 `startsWith("zh")` 会把港澳台用户全丢到简体。
+ */
+private fun resolveByTag(tag: String): PuiStrings {
+    val t = tag.lowercase()
+    return when {
+        t.startsWith("zh") -> when {
+            t.contains("hk") || t.contains("mo") -> PuiZhHk
+            t.contains("tw") || t.contains("hant") -> PuiZhTw
+            else -> PuiZh
+        }
+        t.startsWith("ja") -> PuiJa
+        else -> PuiEn
+    }
 }
 
 // 三个枚举的显示名。顺序必须和枚举的声明顺序一致（分段控件按下标取）。

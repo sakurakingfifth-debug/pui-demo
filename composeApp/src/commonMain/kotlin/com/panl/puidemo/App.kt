@@ -59,7 +59,8 @@ import com.panl.puidemo.screens.AppInstallSheet
 import com.panl.puidemo.screens.ColorScreen
 import com.panl.puidemo.screens.ExampleScreen
 import com.panl.puidemo.screens.GalleryScreen
-import com.panl.puidemo.screens.IconSetDetail
+import com.panl.puidemo.screens.IconSetDetail
+import com.panl.puidemo.screens.LanguageScreen
 import com.panl.puidemo.screens.TokensScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -94,7 +95,7 @@ fun App(initialPage: Int = 0, darkOverride: Boolean? = null, languageOverride: P
     ) {
         // 文案在这里注入：语言只影响文字，和明暗/配色互不干扰。
         // 「跟随系统」在组合期读一次系统语言 —— 系统语言变了会触发重组（Locale 是 State）。
-        val strings = resolveStrings(languageOverride ?: state.language, Locale.current.language)
+        val strings = resolveStrings(languageOverride ?: state.language, Locale.current.toLanguageTag())
         CompositionLocalProvider(LocalStrings provides strings) {
             // 换明暗时整屏从中心圆形展开（accent 变化不触发，只有深浅色切换才播）
             PuiThemeReveal(key = dark, origin = state.revealOrigin) {
@@ -285,6 +286,16 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
 
         }
 
+        // 语言页：设置里的子页面，盖在导航栏之上（和图标集详情同一层级）
+        if (state.languagePageOpen) {
+            LanguageScreen(
+                state = state,
+                topBlur = state.blurEnabled,
+                topBlurRadius = (state.topBlurPx / density).dp,
+                onClose = { state.languagePageOpen = false }
+            )
+        }
+
         // 轻提示：进场「从下往上浮 + 淡入 + 轻微放大」，退场反向。
         // 退出动画期间 toast 已经是 null，所以文案要留一份 lastToast，否则退场瞬间字先没了。
         var lastToast by remember { mutableStateOf("") }
@@ -379,6 +390,9 @@ internal fun sheetBackdropBlur(progress: Float): Float =
         set(value) {
             themeModeName = value.name
         }
+
+    /** 语言页是否打开。纯 UI 状态，不落盘。 */
+    var languagePageOpen by mutableStateOf(false)
 
     /** 界面语言。同样存枚举名。 */
     private var languageName by stringPref(prefs, "language", PuiLanguage.System.name)

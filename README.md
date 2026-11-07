@@ -165,7 +165,11 @@ if (open) {
   `iconSheet` / `iconSet` / `picker` / `common` / `enums`），中英各一份实例 `PuiZh` / `PuiEn`；
 - `LocalStrings` 是 `staticCompositionLocalOf`，在 `App()` 里按语言注入 —— 换语言整屏即时生效，不用重启；
 - 「跟随系统」用 `androidx.compose.ui.text.intl.Locale.current.language`，Android 和桌面同一套代码；
-- 设置页「语言」分组可切「跟随系统 / 中文 / English」，选择落盘（`language`）。
+- 设置页「语言」分组只有一行入口，点进去是**独立语言页**（`screens/LanguageScreen.kt`）：
+  每项一行、显示本族名 + BCP-47 标签。语言一多，分段控件会挤成看不清的小格子，所以单独成页。
+- 目前 5 种：简体中文 / 繁體中文（台灣）/ 繁體中文（香港）/ English / 日本語，选择落盘（`language`）。
+  繁中两套是分别写的，不是简转繁 —— 只转字形不改用词，读起来会是「大陆人写的繁体」。
+- 加一门语言 = 在 `Strings*.kt` 里加一个 `PuiStrings` 实例 + 枚举加一项，界面不用动。
 
 **加一条文案**：`Strings.kt` 里两个实例各加一个字段，名字必须一致（少一个编译不过）。
 带参数的写成 `(Int) -> String` 而不是 `%d` 占位符 —— 拼错编译期就报。

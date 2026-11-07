@@ -57,6 +57,7 @@ import com.panl.puidemo.screens.AppInstallSheet
 import com.panl.puidemo.screens.ArgbPickerDialog
 import com.panl.puidemo.screens.IconPreviewSheet
 import com.panl.puidemo.screens.IconSetDetail
+import com.panl.puidemo.screens.LanguageScreen
 import java.io.File
 import kotlin.math.roundToInt
 import org.jetbrains.skia.EncodedImageFormat
@@ -221,6 +222,15 @@ fun main(args: Array<String>) {
             File(outDir, "sample.svg").writeText(buildSvg(data.segmentsAt(3), 0xFFBE3455.toInt()))
             File(outDir, "sample.xml").writeText(buildVectorXml(data.segmentsAt(3), 0x80BE3455.toInt()))
             println("export sample: ${data.nameAt(3)}")
+        }
+    }
+
+    // 语言页：独立子页，出图确认顶栏和列表
+    renderScene(outDir, "language-page", widthDp, heightDp, density) {
+        PuiTheme {
+            val prefs = rememberPuiPrefs()
+            val st = remember { PuiDemoState(prefs) }
+            LanguageScreen(state = st, topBlur = true, topBlurRadius = 18.dp, onClose = {})
         }
     }
 
