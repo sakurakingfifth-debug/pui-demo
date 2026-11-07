@@ -1,9 +1,12 @@
 package com.panl.puidemo.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,22 +27,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.util.lerp
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.panl.pui.PuiGroup
-import com.panl.pui.PuiIcon
-import com.panl.pui.PuiIconView
-import com.panl.pui.PuiRadioRow
+import com.panl.pui.PuiPageTitle
 import com.panl.pui.puiProgressiveTopBlur
 import com.panl.pui.rememberNavigationBarHeight
 import com.panl.pui.rememberPuiTopBlurHeight
@@ -52,18 +50,16 @@ import com.panl.puidemo.PuiLanguage
 /**
  * 语言页：从设置里点进来的一级子页。
  *
- * 为什么不塞在设置页里做一个分段控件：语言是「一次性选完就走」的配置，
- * 选项一多（现在 6 个，以后还会加），分段控件会挤成一条看不清的小格子。
- * 独立成页之后每项一行，能放本族名 + BCP-47 标签，加语言也不用改布局。
+ * 布局照参考图：大标题 + 一整张卡片，只有「跟随系统」带图标，
+ * 选中的行右侧是一个实心勾（不是单选圆点）。
  *
- * 选中后**不自动返回** —— 留在页面上能立刻看到整页文案跟着变，比退回去再看更直观。
+ * 进出场是共享元素：外层裁形状从被点那行长到全屏，内层内容跟着上沿走并淡入 ——
+ * 和图标集详情页完全同一套参数。
  */
 @Composable
 fun LanguageScreen(
     state: PuiDemoState,
-    /** 被点的那一行在根坐标里的矩形 —— 页面从它长出来，退场再缩回去。 */
     origin: Rect,
-    /** 展开进度，由外壳持有：背景的压暗要跟它跑同一条曲线。 */
     progress: Animatable<Float, AnimationVector1D>,
     topBlur: Boolean,
     topBlurRadius: Dp,
@@ -72,16 +68,12 @@ fun LanguageScreen(
     val scheme = MaterialTheme.colorScheme
     val strings = LocalStrings.current
     val statusH = rememberStatusBarHeight()
-    val density = LocalDensity.current
     val navH = rememberNavigationBarHeight()
     val blurH = rememberPuiTopBlurHeight()
+    val density = LocalDensity.current
 
     PuiBackHandler(enabled = true) { onClose() }
 
-    // 和图标集详情页完全同构的两层：
-    //   外层裁形状 —— 从被点那行的矩形长到全屏；
-    //   内层管内容 —— 上沿跟着走（translationY），前 28% 淡入。
-    // 只做外层的话，看起来是「一块白板在放大」，不是「页面从卡片里长出来」。
     Box(
         Modifier
             .fillMaxSize()
@@ -93,8 +85,7 @@ fun LanguageScreen(
                     clip = false
                 } else {
                     val hz = (p / 0.3f).coerceIn(0f, 1f)
-                    // 圆角前 70% 保持 20dp，最后 30% 收到 0 —— 写成 20*(1-p) 的话
-                    // 展开到一半就成了直角，看着像块生硬的方板
+                    // 圆角前 70% 保持 20dp、后 30% 收到 0，否则展开到一半就成直角
                     val k = ((1f - p) / 0.3f).coerceIn(0f, 1f)
                     val radiusPx = 20f * (k * k * (3f - 2f * k)) * density.density
                     clip = true
@@ -115,7 +106,6 @@ fun LanguageScreen(
                 .fillMaxSize()
                 .graphicsLayer {
                     val p = progress.value.coerceIn(0f, 1f)
-                    // 上沿在哪，页面顶边就在哪 —— 内容跟着裁切框一起往上走
                     translationY = lerp(origin.top, 0f, p)
                     // 前 28% 淡入：p=0 时还是底下那张卡片
                     val f = (p / 0.28f).coerceIn(0f, 1f)
@@ -126,7 +116,6 @@ fun LanguageScreen(
             Column(
                 Modifier
                     .fillMaxSize()
-                    // 内容从顶栏下面开始，往上滚的部分会被渐进模糊吃掉 —— 和图标集详情页同一套
                     .then(
                         if (topBlur) {
                             Modifier.puiProgressiveTopBlur(height = blurH, maxRadius = topBlurRadius)
@@ -135,71 +124,97 @@ fun LanguageScreen(
                         }
                     )
                     .verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, top = statusH + TOP_BAR_HEIGHT, bottom = navH + 16.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = statusH + 20.dp, bottom = navH + 16.dp),
+                verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
-                // 不加分组标题：页面标题已经写了「语言」，再加一行就是重复
+                PuiPageTitle(strings.tokens.groupLanguage)
+
                 PuiGroup(title = null) {
-                    // 只列已翻译的；未翻译的占位项在枚举里，但不显示
                     PuiLanguage.shown.forEachIndexed { index, language ->
                         val isSystem = language == PuiLanguage.System
-                        PuiRadioRow(
-                            // 一律显示本族名：英文用户找 "English"，日本用户找 "日本語"，
-                            // 不用先看懂当前界面语言才能找到自己的
+                        LanguageRow(
                             title = if (isSystem) strings.languageSystem else language.endonym,
-                            subtitle = if (isSystem) "" else language.tag,
+                            // 只有「跟随系统」带图标：其余行的本族名本身就是最好的标识
+                            showLeading = isSystem,
                             selected = state.language == language,
-                            onClick = { state.language = language },
-                            showDivider = index != PuiLanguage.shown.lastIndex
+                            showDivider = index != PuiLanguage.shown.lastIndex,
+                            onClick = { state.language = language }
                         )
                     }
                 }
             }
-
-        // 顶栏：透明底，内容从下面穿过去；只有返回键和标题
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(top = statusH)
-                .height(TOP_BAR_HEIGHT)
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onClose() },
-                contentAlignment = Alignment.Center
-            ) {
-                // 图标集里没有左箭头，把右箭头翻过来用 —— 比多画一个图标更省
-                PuiIconView(
-                    PuiIcon.ChevronRight,
-                    Modifier.size(20.dp).graphicsLayer { scaleX = -1f },
-                    tint = scheme.onSurface
-                )
-            }
-            Spacer(Modifier.width(4.dp))
-            Text(
-                strings.tokens.groupLanguage,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = scheme.onSurface
-            )
-        }
         }
     }
 }
 
-private val TOP_BAR_HEIGHT = 56.dp
+/**
+ * 语言列表的一行。
+ *
+ * 不用 `PuiRadioRow`：那是单选圆点，参考图里选中的是**实心勾**，
+ * 而且只有第一行带图标，用通用行组件反而要开一堆口子。
+ */
+@Composable
+private fun LanguageRow(
+    title: String,
+    showLeading: Boolean,
+    selected: Boolean,
+    showDivider: Boolean,
+    onClick: () -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    Column {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onClick() }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (showLeading) {
+                LanguageBadge()
+                Spacer(Modifier.width(12.dp))
+            }
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                color = scheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            if (selected) {
+                Spacer(Modifier.width(12.dp))
+                Box(
+                    Modifier
+                        .size(22.dp)
+                        .clip(CircleShape)
+                        .background(scheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "✓",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = scheme.onPrimary
+                    )
+                }
+            }
+        }
+        if (showDivider) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp)
+                    .height(1.dp)
+                    .background(scheme.outlineVariant.copy(alpha = 0.5f))
+            )
+        }
+    }
+}
 
 /**
- * 「语言」行首的徽章。
- *
- * 用设计给的 SVG（24×24 双层：40% 透明度的圆 + 100% 的字形），走 PathParser 直接画 ——
- * 不转成 PuiIcon 枚举，因为它只在这一处用，塞进图标集反而多一层维护。
+ * 「语言」行首的徽章：设计给的 24×24 双层 SVG（圆 + 字形），
+ * 走 PathParser 直接画 —— 只在这一处用，没必要塞进 PuiIcon 枚举。
  */
 private const val LANG_CIRCLE =
     "M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
@@ -213,7 +228,6 @@ fun LanguageBadge() {
     val circle = remember { PathParser().parsePathString(LANG_CIRCLE).toPath() }
     val glyph = remember { PathParser().parsePathString(LANG_GLYPH).toPath() }
     Canvas(Modifier.size(32.dp)) {
-        // 原图是 24×24 画布，等比缩放到 32dp
         val k = size.minDimension / 24f
         scale(k, pivot = Offset.Zero) {
             drawPath(circle, accent.copy(alpha = 0.16f))
