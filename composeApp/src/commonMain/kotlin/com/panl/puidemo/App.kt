@@ -54,6 +54,7 @@ import com.panl.pui.PuiTopFade
 import com.panl.pui.navBackdropSource
 import com.panl.pui.puiProgressiveTopBlur
 import com.panl.pui.puiRealtimeBlur
+import com.panl.pui.rememberInstallNotifier
 import com.panl.pui.rememberNavBackdrop
 import com.panl.pui.rememberNavigationBarHeight
 import com.panl.pui.rememberPuiTopBlurHeight
@@ -120,6 +121,8 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
     val blurH = rememberPuiTopBlurHeight()
     val navBarH = rememberNavigationBarHeight()
     val scope = rememberCoroutineScope()
+    // 安装进度交给系统通知栏 —— 界面收起之后它还得继续跑
+    val installNotifier = rememberInstallNotifier()
     var toast by remember { mutableStateOf<String?>(null) }
     // 导航文案跟语言走，所以不能是顶层常量
     val strings = LocalStrings.current
@@ -169,13 +172,58 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
         }
     }
 
+    /** 收起浮窗并等退场动画真正播完 —— 安装流程要等它结束才发通知。 */
+    suspend fun closeSheetAndWait() {
+        if (!state.sheetOpen) return
+        sheetClosing = true
+        sheetProgress.animateTo(0f, tween(durationMillis = 240, easing = FastOutLinearInEasing))
+        state.sheetOpen = false
+        sheetClosing = false
+    }
+
     fun closeSheet() {
         if (sheetClosing || !state.sheetOpen) return
-        sheetClosing = true
+        scope.launch { closeSheetAndWait() }
+    }
+
+    /**
+     * 点「重新安装」之后发生的事：浮窗收起 → 通知栏接管进度 → 完成后换成结果通知。
+     *
+     * 面板只负责「待安装」这一段。一旦开始装，它就该让位 ——
+     * 安装可能要几秒到几十秒，中间用户还要切去别处，进度留在屏幕上没有意义。
+     *
+     * 进度是**模拟**推进的：演示里没有真实的包可装（真装要走 `PackageInstaller.Session`，
+     * 会跳到系统安装器，那一步的通知由系统自己发）。真实实现把下面这段循环
+     * 换成 Session 的进度回调即可，通知这条链路不用动。
+     */
+    fun startInstall() {
         scope.launch {
-            sheetProgress.animateTo(0f, tween(durationMillis = 240, easing = FastOutLinearInEasing))
-            state.sheetOpen = false
-            sheetClosing = false
+            // 通知发不出去就先说明白：桌面没有通知栏，Android 13+ 没授权也一样。
+            // 这种情况下把浮窗留在原地，比点完按钮什么都没发生要好。
+            if (!installNotifier.available && !installNotifier.ensurePermission()) {
+                toast = strings.install.notifyDenied
+                return@launch
+            }
+
+            // 等面板退干净再发通知：两个东西同时在屏幕上，看着像没关掉
+            closeSheetAndWait()
+            // 通知在屏幕顶部、界面在中部，不指一下的话用户会以为点完就没下文了
+            toast = strings.install.notifyHint
+
+            val name = "PUI Demo"
+            installNotifier.start(strings.install.installing, "$name · ${AppInfo.VERSION}")
+            // 每 2% 刷一次：100 次太密，通知栏跟不上；10 次又看不出在动
+            for (percent in 0..100 step 2) {
+                delay(58)
+                installNotifier.update(percent, "$name · $percent%")
+            }
+            // 停在 100% 一小会儿再换结果，否则进度条一闪而过，看不出「装完了」
+            delay(320)
+            installNotifier.finish(
+                title = strings.install.installed,
+                text = strings.install.tapToOpen,
+                success = true
+            )
         }
     }
 
@@ -355,6 +403,7 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
                 style = state.installStyle,
                 position = state.sheetPosition,
                 progress = { sheetProgress.value },
+                onInstall = { startInstall() },
                 onDismiss = { closeSheet() }
             )
         }

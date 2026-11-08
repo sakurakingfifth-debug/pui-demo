@@ -124,7 +124,13 @@ val PuiJa = PuiStrings(
         versionName = "バージョン名",
         versionCode = "バージョンコード",
         cancel = "キャンセル",
-        reinstall = "再インストール"
+        reinstall = "再インストール",
+        installing = "インストール中…",
+        installed = "インストール完了",
+        installFailed = "インストール失敗",
+        tapToOpen = "タップして開く",
+        notifyDenied = "インストールの進行状況を表示するには通知の許可が必要です",
+        notifyHint = "インストールの進行状況は通知に表示されます"
     ),
     iconSheet = IconSheetStrings(
         savedTo = { "保存先：$it" },

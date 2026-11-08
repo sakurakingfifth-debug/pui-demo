@@ -257,6 +257,7 @@ fun main(args: Array<String>) {
                     style = style,
                     position = pos,
                     progress = { 1f },
+                    onInstall = {},
                     onDismiss = {}
                 )
             }

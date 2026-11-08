@@ -49,12 +49,16 @@ import com.panl.puidemo.LocalStrings
  *  - 全屏：整页铺满，顶部返回栏 + 底部动作栏。
  *
  * 形态由设置页「安装方式」决定 —— 这里只负责按形态摆，不判断该用哪个。
+ *
+ * 「重新安装」不是关掉面板就完事：[onInstall] 由外壳接住，它会先让面板退场，
+ * 再把安装进度交给系统通知栏（面板是「待安装」的界面，装起来之后就不该还占着屏幕）。
  */
 @Composable
 fun AppInstallSheet(
     style: InstallStyle,
     position: PuiSheetPosition,
     progress: () -> Float,
+    onInstall: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val strings = LocalStrings.current
@@ -82,11 +86,15 @@ fun AppInstallSheet(
                 Spacer(Modifier.height(18.dp))
                 InstallInfoCard()
                 Spacer(Modifier.height(18.dp))
-                InstallActions(onDismiss)
+                InstallActions(onDismiss = onDismiss, onInstall = onInstall)
             }
         }
 
-        InstallStyle.FullScreen -> FullScreenInstall(progress = progress, onDismiss = onDismiss)
+        InstallStyle.FullScreen -> FullScreenInstall(
+            progress = progress,
+            onInstall = onInstall,
+            onDismiss = onDismiss
+        )
     }
 }
 
@@ -97,7 +105,11 @@ fun AppInstallSheet(
  * 全屏页面没有「从哪来」的参照物，硬做上滑会看起来像整页被顶了一下。
  */
 @Composable
-private fun FullScreenInstall(progress: () -> Float, onDismiss: () -> Unit) {
+private fun FullScreenInstall(
+    progress: () -> Float,
+    onInstall: () -> Unit,
+    onDismiss: () -> Unit
+) {
     val scheme = MaterialTheme.colorScheme
     val strings = LocalStrings.current
     val statusH = rememberStatusBarHeight()
@@ -142,7 +154,7 @@ private fun FullScreenInstall(progress: () -> Float, onDismiss: () -> Unit) {
                 .padding(horizontal = 20.dp)
                 .padding(top = 12.dp, bottom = navH + 16.dp)
         ) {
-            InstallActions(onDismiss)
+            InstallActions(onDismiss = onDismiss, onInstall = onInstall)
         }
     }
 }
@@ -216,7 +228,7 @@ private fun InstallInfoCard() {
 
 /** 底部并排两个动作。 */
 @Composable
-private fun InstallActions(onDismiss: () -> Unit) {
+private fun InstallActions(onDismiss: () -> Unit, onInstall: () -> Unit) {
     val strings = LocalStrings.current
     Row(
         Modifier.fillMaxWidth(),
@@ -230,7 +242,7 @@ private fun InstallActions(onDismiss: () -> Unit) {
         )
         PuiButton(
             text = strings.install.reinstall,
-            onClick = onDismiss,
+            onClick = onInstall,
             modifier = Modifier.weight(1f),
             style = PuiButtonStyle.Filled
         )

@@ -159,6 +159,38 @@ if (open) {
 放在这里而不是组件页，是因为它是一次真实的安装交互，不是一个组件标本；
 形态开关紧挨着入口，改完能立刻点开看效果。
 
+### 安装过程：面板收起，通知接管
+
+「重新安装」不是关掉面板就结束：
+
+```
+点「安装应用」→ 浮窗（待安装）→ 点「重新安装」
+   → 面板播放退场 → 通知栏出现进度条 → 完成后换成结果通知
+```
+
+面板只负责「待安装」这一段。一旦开始装，它就该让位 —— 安装要跑几秒到几十秒，
+中间用户还会切去别处，进度留在界面上没有意义。
+
+实现分两层：
+
+- `com.panl.pui.InstallNotifier`（`PuiInstallNotifier.kt`）—— 平台无关的四个动作：
+  `ensurePermission / start / update / finish`；
+- `androidMain` 用两条通知渠道落地：`pui_install_progress`（低优先级、静默）跑进度，
+  `pui_install_result`（默认优先级）报结果。同一个 id 原地刷新，不会堆出一串进度条。
+
+几个细节：
+
+- **Android 13+ 的通知权限是运行时权限**，首次点「安装」时才申请（`POST_NOTIFICATIONS`）。
+  被拒绝时**不关面板**，只提示一句 —— 关掉之后没有任何反馈，比不做更糟。
+- **新的一次安装会先撤掉上一次的结果通知**，否则「安装完成」会和「正在安装」并排显示。
+- 桌面端没有通知栏，`InstallNotifier.available` 恒为 false，点安装会留在面板上并说明原因。
+  没做 `SystemTray` 兜底：Windows 托盘气泡一次只能显示一条，刷新进度就是不停覆盖同一条，
+  看起来像在闪，不如不做。
+
+演示里的进度是**模拟**推进的（`App.kt` 的 `startInstall`）：没有真实的包可装，
+真装要走 `PackageInstaller.Session`，那一步的通知由系统安装器自己发。
+真实实现把那段循环换成 Session 的进度回调即可，通知这条链路不用改。
+
 ### 多语言
 
 界面文案全部走 `commonMain/.../puidemo/Strings.kt`，**不依赖 compose-resources**：

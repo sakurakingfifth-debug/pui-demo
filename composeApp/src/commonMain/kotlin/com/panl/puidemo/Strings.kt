@@ -158,7 +158,19 @@ class InstallStrings(
     val versionName: String,
     val versionCode: String,
     val cancel: String,
-    val reinstall: String
+    val reinstall: String,
+    /** 通知标题：正在安装。 */
+    val installing: String,
+    /** 通知标题：安装完成。 */
+    val installed: String,
+    /** 通知标题：安装失败。 */
+    val installFailed: String,
+    /** 完成通知的正文：点按打开。 */
+    val tapToOpen: String,
+    /** 通知权限被拒 / 平台没有通知栏时的提示。 */
+    val notifyDenied: String,
+    /** 浮窗收起后的提示：进度去通知栏了，别在界面上找。 */
+    val notifyHint: String
 )
 
 @Immutable
@@ -354,7 +366,13 @@ val PuiZh = PuiStrings(
         versionName = "版本名称",
         versionCode = "版本代码",
         cancel = "取消",
-        reinstall = "重新安装"
+        reinstall = "重新安装",
+        installing = "正在安装…",
+        installed = "安装完成",
+        installFailed = "安装失败",
+        tapToOpen = "点按打开",
+        notifyDenied = "需要通知权限才能显示安装进度",
+        notifyHint = "安装进度已转到通知栏"
     ),
     iconSheet = IconSheetStrings(
         savedTo = { "已保存到 $it" },
@@ -513,7 +531,13 @@ val PuiEn = PuiStrings(
         versionName = "Version name",
         versionCode = "Version code",
         cancel = "Cancel",
-        reinstall = "Reinstall"
+        reinstall = "Reinstall",
+        installing = "Installing…",
+        installed = "Installed",
+        installFailed = "Installation failed",
+        tapToOpen = "Tap to open",
+        notifyDenied = "Notification permission is required to show install progress",
+        notifyHint = "Install progress moved to notifications"
     ),
     iconSheet = IconSheetStrings(
         savedTo = { "Saved to $it" },
