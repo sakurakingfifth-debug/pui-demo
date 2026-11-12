@@ -349,7 +349,9 @@ zipalign -c -P 16 -v 4 app-debug.apk   # 末尾应输出 Verification successful
 
 **释放什么**：这个演示没有图片墙，大头是图标集 —— 两套源文本 2.6 MB，外加每套最多
 360 条已解析的几何（几何在原生堆上）。`IconSetCache.clear()` 把它们整个丢掉，
-代价是下次进图标库重新读一遍 assets（几十毫秒）。实测 OnePlus PLK110 / Android 17：
+代价是下次进图标库重新读一遍 assets（几十毫秒）。释放前后各取一次
+`Debug.getPss()`，日志里直接能看到还回去多少（主线程进来的那次跳过取样 ——
+读 smaps 是毫秒级的，3 秒窗口不该花在这上面）。实测 OnePlus PLK110 / Android 17：
 TRIM 前后 PSS **107 MB → 91.5 MB**，界面不掉图标、不用重启。
 
 `onTrimMemory` 作为兜底，只认 `RUNNING_CRITICAL` 和 `>= TRIM_MEMORY_BACKGROUND`。
@@ -373,8 +375,36 @@ adb logcat -s PuiMem
 > adb 发的广播没有 `callback` Binder，日志里会多一行「回执失败：没拿到 callback Binder」，
 > 属于预期；真机由系统发起时才有 Binder。
 
-**还没做**：清单里的 `<memory-budget>`（API 37.2 起生效）暂时写不进去 —— build-tools 36
-的 aapt2 会报 `unexpected element <memory-budget>`，等工具链跟上再放开。
+内存限制器那边用系统给的三条命令看现象：
+
+```bash
+adb shell am memory-limiter status                    # 本机是否在施加限制
+adb shell am memory-limiter ignore com.panl.puidemo   # 让限制器放过这个包
+adb shell am memory-limiter manual <pid> 30           # 给进程硬压一道 30MB 上限
+```
+
+> 手上这台 PLK110（Android 17）跑 `status` 出来是 `disabled`，`manual` 也不生效
+> —— 文档写明这两条命令对「不施加内存限制的设备」没有作用。所以这半边只能代码级
+> 保证：启动时认一次 `ApplicationExitInfo`，真被限制器带走时 logcat 会留下
+> `desc=MemoryLimiter:…`。换成真施加限制的机器再复测。
+
+**清单预算暂时不加**：`<memory-budget android:maxMb="…" />` 看起来只是几行 XML，
+门槛其实有三条 ——
+
+1. 它从 **Android 17 QPR2（API 37.2）** 才生效，低版本解析器会忽略，兼容性倒是没问题；
+2. 要**编译**它得把 `compileSdk` 抬到 `release(37) { minorApiLevel = 2 }`，而这个 DSL
+   要求 **AGP 9.5.0+**，本项目在 9.2.1；
+3. 官方明确写了**只应作用于 release（优化）包** —— 未优化的 debug 包带插桩和调试分配，
+   按预算裁一轮就是持续交换抖动，反而更糟。
+
+本项目交付的就是 debug 包，所以现在写进去只有坏处。等以后出 release 包、工具链也跟上了，
+在 `<application>` 里补三行即可（数值按当时的实机工作集定，不是拍脑袋）：
+
+```xml
+<memory-budget android:maxMb="200" />
+<memory-budget android:maxMb="120" android:state="perceptible" />
+<memory-budget android:maxMb="96"  android:state="background" />
+```
 
 ---
 

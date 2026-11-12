@@ -1,5 +1,7 @@
 package com.panl.puidemo
 
+import android.os.Debug
+import android.os.Looper
 import android.util.Log
 import com.panl.puidemo.icons.IconSetCache
 
@@ -34,9 +36,23 @@ object MemoryPressure {
         if (!force && now - lastReleaseAt < 1000) return 0
         lastReleaseAt = now
 
+        // 前后各取一次，日志里直接能看到「还回去多少」，不用再挂 profiler
+        val before = samplePssKb()
         val dropped = runCatching { IconSetCache.clear() }.getOrDefault(0)
         runCatching { System.gc() }
-        Log.i(TAG, "归还内存（$source）：丢弃 $dropped 套图标集")
+        val after = samplePssKb()
+
+        Log.i(
+            TAG,
+            buildString {
+                append("归还内存（").append(source).append("）：丢弃 ").append(dropped).append(" 套图标集")
+                // before == 0 说明这次是从主线程进来的（取样被跳过），只报堆
+                if (before > 0) {
+                    append("；PSS ").append(before / 1024).append("MB → ").append(after / 1024).append("MB")
+                }
+                append("；Java 堆 ").append(heapUsage())
+            }
+        )
         return dropped
     }
 
@@ -49,5 +65,25 @@ object MemoryPressure {
      */
     fun preserve(source: String) {
         Log.i(TAG, "保存现场（$source）：状态已随改随落盘，无额外写盘")
+    }
+
+    /**
+     * 取一次自身 PSS（KB）。
+     *
+     * 用 `Debug.getPss()` 而不是 `Debug.getMemoryInfo()`：后者会顺带做分类拆解，
+     * 单次几十毫秒。即便是便宜的这一个也要读 smaps，所以主线程直接跳过 ——
+     * 公平运行内存的窗口只有 3 秒，没必要把时间花在采样上。
+     */
+    private fun samplePssKb(): Long {
+        if (Looper.myLooper() == Looper.getMainLooper()) return 0L
+        // 注意 Debug.getPss() 返回的是 Long（不是 getMemoryInfo 里的 Int）
+        return runCatching { Debug.getPss() }.getOrDefault(0L)
+    }
+
+    private fun heapUsage(): String {
+        val rt = Runtime.getRuntime()
+        val used = (rt.totalMemory() - rt.freeMemory()) / 1048576
+        val max = rt.maxMemory() / 1048576
+        return "$used/$max MB"
     }
 }
