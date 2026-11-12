@@ -325,6 +325,57 @@ zipalign -c -P 16 -v 4 app-debug.apk   # 末尾应输出 Verification successful
 
 另外：`PuiCard` 不要再套 `clip()`（Card 自己按 shape 裁了），多余的一层就是一个图层。
 
+### 公平运行内存与内存限制器
+
+两条机制都是**系统单方面施压**，应用这边能做的只有三件事：收得到、放得下、回得快。
+
+**公平运行内存**（ITGSA 金标联盟：vivo / 小米 / OPPO / 荣耀）走广播：
+
+| 广播 | 时机 | 应用该做什么 |
+|---|---|---|
+| `itgsa.intent.action.TRIM` | 物理内存（高优进程 PSS 之和）或 Java 堆触达预警线 | 尽快释放 |
+| `itgsa.intent.action.KILL` | 触达查杀线，**3 秒**后动手 | 存现场 → 释放 → 回执 |
+
+`FairMemoryReceiver` 动态注册（进程得活着，manifest 静态注册没有意义），跑在独立的
+`HandlerThread` 上，按官方结构读 `extras["common"]` / `extras["extra"]`，处理完通过
+`common.callback` 这个 Binder 回执：事务码 `FIRST_CALL_TRANSACTION`，参数依次
+`notifyType / notifyId / result / extra`。**不回执等于装死**，系统等满 3 秒照样查杀。
+
+**内存限制器**（Android 17 / API 37）没有广播可接 —— 它是 cgroup v2 的 `memory.high`，
+超了内核先限流、必要时直接 OOM，只能事后认：查杀时 `reason` 只是 `REASON_OTHER`，
+真正的线索在 `description` 里的 `MemoryLimiter:AnonSwap`。`PuiDemoApp.logLastExit()`
+启动时读一次 `getHistoricalProcessExitReasons`，把命中的退出写进 logcat（`PuiMem` 标签），
+用 `last_exit_ts` 水印去重，不会每次冷启动重复记。
+
+**释放什么**：这个演示没有图片墙，大头是图标集 —— 两套源文本 2.6 MB，外加每套最多
+360 条已解析的几何（几何在原生堆上）。`IconSetCache.clear()` 把它们整个丢掉，
+代价是下次进图标库重新读一遍 assets（几十毫秒）。实测 OnePlus PLK110 / Android 17：
+TRIM 前后 PSS **107 MB → 91.5 MB**，界面不掉图标、不用重启。
+
+`onTrimMemory` 作为兜底，只认 `RUNNING_CRITICAL` 和 `>= TRIM_MEMORY_BACKGROUND`。
+`TRIM_MEMORY_UI_HIDDEN` 故意不触发 —— 那不是缺内存，是用户切走了，在这上面 GC
+只会让回来时重新解析图标，反而更慢。
+
+自测（不必真把内存吃满）：
+
+```bash
+# 预警：type 1000 = 物理内存，2000 = Java 堆
+adb shell am broadcast -a itgsa.intent.action.TRIM \
+  --ei notifyType 1000 --ei notifyId 1 --ei pss 900 --ei pssLimit 512 -p com.panl.puidemo
+
+# 查杀：日志里应当先「保存现场」再「归还内存」
+adb shell am broadcast -a itgsa.intent.action.KILL \
+  --ei notifyType 2000 --ei notifyId 2 --ei heapAlloc 300 --ei heapCapacity 256 -p com.panl.puidemo
+
+adb logcat -s PuiMem
+```
+
+> adb 发的广播没有 `callback` Binder，日志里会多一行「回执失败：没拿到 callback Binder」，
+> 属于预期；真机由系统发起时才有 Binder。
+
+**还没做**：清单里的 `<memory-budget>`（API 37.2 起生效）暂时写不进去 —— build-tools 36
+的 aapt2 会报 `unexpected element <memory-budget>`，等工具链跟上再放开。
+
 ---
 
 ## 七、和原 `PuiTheme`（Android AAR）的差异

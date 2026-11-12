@@ -146,6 +146,24 @@ object IconSetCache {
         map[set.id] = data
         return data
     }
+
+    /**
+     * 丢掉所有已解析的图标集，返回释放的套数。
+     *
+     * 这是这个 App 里最值钱的一块内存：两套图标集的源文本合计 2.6 MB，
+     * 每套还挂着最多 360 条已解析的 [IconEntry]（每条的几何都在原生堆上）。
+     * 系统来要内存时先还它 —— 代价只是下次进图标库要把 assets 再读一遍（几十毫秒），
+     * 比被查杀重启便宜得多。
+     *
+     * 正在全屏看图标集时清掉不会崩：那个页面自己握着 [IconSetData] 的引用，
+     * 只是这一份在被持有期间回收不掉。
+     */
+    @Synchronized
+    fun clear(): Int {
+        val n = map.size
+        map.clear()
+        return n
+    }
 }
 
 /**
