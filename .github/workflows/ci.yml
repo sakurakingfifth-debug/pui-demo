@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# 发 Release 要写权限；默认的 GITHUB_TOKEN 只有读
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -61,3 +65,28 @@ jobs:
           path: composeApp/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      # 版本号写在 build.gradle.kts 里，这里读出来拼成 tag —— 不额外维护一份
+      # APK 直接挂到 Release 上：Actions 产物要登录才能下、14 天就过期，
+      # Release 附件才是对外能给的地址。同名 Release 已存在就只替换附件，
+      # 所以同一个版本重复推 main 不会堆出一串 Release。
+      - name: 发布 Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' composeApp/build.gradle.kts)
+          TAG="v$VERSION"
+          APK="PUIDemo-$VERSION.apk"
+          cp composeApp/build/outputs/apk/debug/composeApp-debug.apk "$APK"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "已有 $TAG，替换附件"
+            gh release upload "$TAG" "$APK" --clobber
+          else
+            gh release create "$TAG" "$APK" \
+              --title "PUI Demo $VERSION" \
+              --generate-notes
+          fi
+          gh release view "$TAG" --json url,assets \
+            --jq '"Release: " + .url + "  附件: " + ([.assets[].name] | join(", "))'
