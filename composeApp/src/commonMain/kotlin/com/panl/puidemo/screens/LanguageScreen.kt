@@ -38,10 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.panl.pui.PuiGroup
 import com.panl.pui.PuiPageTitle
+import com.panl.pui.PuiTopFade
 import com.panl.pui.puiProgressiveTopBlur
 import com.panl.pui.rememberNavigationBarHeight
 import com.panl.pui.rememberPuiTopBlurHeight
-import com.panl.pui.rememberStatusBarHeight
 import com.panl.puidemo.LocalStrings
 import com.panl.puidemo.PuiBackHandler
 import com.panl.puidemo.PuiDemoState
@@ -67,7 +67,6 @@ fun LanguageScreen(
 ) {
     val scheme = MaterialTheme.colorScheme
     val strings = LocalStrings.current
-    val statusH = rememberStatusBarHeight()
     val navH = rememberNavigationBarHeight()
     val blurH = rememberPuiTopBlurHeight()
     val density = LocalDensity.current
@@ -124,7 +123,10 @@ fun LanguageScreen(
                         }
                     )
                     .verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, top = statusH + 20.dp, bottom = navH + 16.dp),
+                    // 顶部内边距必须让开整条模糊带（statusH + 64dp），
+                    // 否则大标题正好落在带子里，被自己这层 RenderEffect 糊掉。
+                    // 主页面走的是同一个值（App.kt 里 topPad = blurH），这里跟齐。
+                    .padding(start = 16.dp, end = 16.dp, top = blurH + 8.dp, bottom = navH + 16.dp),
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
                 PuiPageTitle(strings.tokens.groupLanguage)
@@ -143,6 +145,10 @@ fun LanguageScreen(
                     }
                 }
             }
+
+            // 和主页面同一套：列表滚进模糊带时由渐隐遮罩接住，
+            // 不然文字是「突然被糊」，而不是「滑进去消失」
+            PuiTopFade(height = blurH)
         }
     }
 }
