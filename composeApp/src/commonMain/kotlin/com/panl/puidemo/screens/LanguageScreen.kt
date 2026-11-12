@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.PathParser
@@ -36,6 +37,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import com.panl.pui.LocalWallpaperAccent
 import com.panl.pui.PuiGroup
 import com.panl.pui.PuiPageTitle
 import com.panl.pui.PuiTopFade
@@ -230,10 +232,15 @@ private const val LANG_GLYPH =
 
 @Composable
 fun LanguageBadge() {
-    val accent = MaterialTheme.colorScheme.primary
+    // 跟 PuiIconView 同一套取色顺序：壁纸取色优先，没开才回落到品牌 primary。
+    // 之前只读了 colorScheme.primary，所以开了壁纸取色以后，整行只有这个徽章还是洋红。
+    val wallpaper = LocalWallpaperAccent.current
+    val accent = wallpaper.takeIf { it != Color.Unspecified } ?: MaterialTheme.colorScheme.primary
     val circle = remember { PathParser().parsePathString(LANG_CIRCLE).toPath() }
     val glyph = remember { PathParser().parsePathString(LANG_GLYPH).toPath() }
-    Canvas(Modifier.size(32.dp)) {
+    // 24dp 与行首图标同框：PuiRowIcon 就是 24dp，路径本身也是 24 网格，
+    // 之前画成 32dp，比相邻行的图标大一圈。
+    Canvas(Modifier.size(24.dp)) {
         val k = size.minDimension / 24f
         scale(k, pivot = Offset.Zero) {
             drawPath(circle, accent.copy(alpha = 0.16f))
