@@ -2,9 +2,11 @@ package com.panl.pui
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.ContextWrapper
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
+import android.net.Uri
 import android.os.Build
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
@@ -284,6 +286,21 @@ actual fun PuiDialogWindowEffect(scrim: Boolean, bottomAligned: Boolean) {
             window.setGravity(
                 if (bottomAligned) Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL else Gravity.CENTER
             )
+        }
+    }
+}
+
+@Composable
+actual fun rememberUrlOpener(): (String) -> Unit {
+    val ctx = LocalContext.current
+    return remember(ctx) {
+        { url: String ->
+            runCatching {
+                ctx.startActivity(
+                    Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
         }
     }
 }

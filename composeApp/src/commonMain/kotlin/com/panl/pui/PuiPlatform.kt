@@ -97,3 +97,12 @@ expect fun PuiSystemBarsAppearance(darkTheme: Boolean)
  */
 @Composable
 expect fun PuiDialogWindowEffect(scrim: Boolean, bottomAligned: Boolean)
+
+/**
+ * 用系统浏览器打开外部链接。
+ *
+ * Android 走 `ACTION_VIEW`（带 NEW_TASK，因为不在 Activity 里发起）；
+ * 桌面走 `Desktop.browse`；两端都吞掉异常 —— 打不开链接不该让界面崩。
+ */
+@Composable
+expect fun rememberUrlOpener(): (String) -> Unit

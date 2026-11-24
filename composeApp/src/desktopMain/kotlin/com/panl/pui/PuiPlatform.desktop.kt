@@ -61,3 +61,9 @@ actual fun PuiSystemBarsAppearance(darkTheme: Boolean) = Unit
 /** 桌面侧没有窗口遮罩 / gravity 这一套，Dialog 由 Compose 自己摆。 */
 @Composable
 actual fun PuiDialogWindowEffect(scrim: Boolean, bottomAligned: Boolean) = Unit
+
+/** 桌面侧交给系统默认浏览器；没有图形环境时静默失败。 */
+@Composable
+actual fun rememberUrlOpener(): (String) -> Unit = { url: String ->
+    runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
+}
