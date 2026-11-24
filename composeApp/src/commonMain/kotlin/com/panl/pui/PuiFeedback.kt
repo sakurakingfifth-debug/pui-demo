@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,16 +50,28 @@ fun PuiDialog(
     title: String,
     text: String,
     onDismiss: () -> Unit,
-    confirmText: String = "确定",
-    dismissText: String = "取消",
+    confirmText: String = PuiLocale.confirm,
+    dismissText: String = PuiLocale.cancel,
     danger: Boolean = false,
+    /** 背后的灰色遮罩；关掉就只剩模糊。 */
+    scrim: Boolean = true,
+    /** 信息类弹窗只要一个「知道了」，不需要取消。 */
+    showCancel: Boolean = true,
+    /** 贴屏幕底部弹（浮窗安装页那种「卡片在下、确认也在下」的场景）。 */
+    bottomAligned: Boolean = false,
     onConfirm: () -> Unit = {}
 ) {
     val scheme = MaterialTheme.colorScheme
     Dialog(onDismissRequest = onDismiss) {
+        // 遮罩强度与贴底对齐交给平台层：桌面的 Dialog 窗口是另一套实现
+        PuiDialogWindowEffect(scrim = scrim, bottomAligned = bottomAligned)
         Column(
             Modifier
                 .widthIn(max = 320.dp)
+                // 贴底时留出和导航栏的距离；居中时这点 padding 只让卡片往上挪一点点，看不出差别
+                .padding(bottom = if (bottomAligned) 18.dp else 0.dp)
+                // 白底卡片叠在白底浮窗上时，没有投影就分不出层次
+                .shadow(22.dp, MaterialTheme.shapes.extraLarge)
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(scheme.surfaceContainerLowest)
                 .padding(22.dp)
@@ -76,12 +89,14 @@ fun PuiDialog(
             )
             Spacer(Modifier.height(20.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                PuiButton(
-                    dismissText,
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                    style = PuiButtonStyle.Ghost
-                )
+                if (showCancel) {
+                    PuiButton(
+                        dismissText,
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        style = PuiButtonStyle.Ghost
+                    )
+                }
                 PuiButton(
                     confirmText,
                     onClick = { onConfirm(); onDismiss() },

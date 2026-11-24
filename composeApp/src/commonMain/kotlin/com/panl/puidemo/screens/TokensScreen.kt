@@ -212,7 +212,7 @@ fun TokensScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
 
         PuiGroup(t.groupType) {
             Column(Modifier.padding(vertical = 6.dp)) {
-                TextTokenRow("displaySmall", "28 / 36 Bold", t.usagePageTitle)
+                TextTokenRow("displaySmall", "32 / 40 Bold", t.usagePageTitle)
                 TextTokenRow("headlineSmall", "20 / 26 SemiBold", t.usageDialogTitle)
                 TextTokenRow("titleLarge", "18 / 24 SemiBold", t.usageSectionTitle)
                 TextTokenRow("titleMedium", "16 / 22 Medium", t.usageRowTitle)
@@ -245,12 +245,6 @@ fun TokensScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
                     t.aboutBody(AppInfo.VERSION),
                     style = MaterialTheme.typography.bodyMedium,
                     color = scheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    t.aboutBlurNote,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = scheme.onSurfaceVariant.copy(alpha = 0.75f)
                 )
             }
         }

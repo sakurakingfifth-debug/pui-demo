@@ -44,6 +44,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -391,7 +392,12 @@ fun PuiSegmentedControl(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    /**
+     * 手指拖动时的连续位置（0f..items.lastIndex）。传了它就用它定位选中胶囊，
+     * 松手后传回 null，胶囊会自己弹到 [selectedIndex]。用来做「跟手滑动」的分段控件。
+     */
+    dragFraction: Float? = null
 ) {
     val scheme = MaterialTheme.colorScheme
     val pad = 3.dp
@@ -408,15 +414,24 @@ fun PuiSegmentedControl(
             .background(scheme.surfaceContainerHighest)
     ) {
         val itemW = (maxWidth - pad * 2) / items.size
-        val offset by animateDpAsState(
-            targetValue = itemW * selectedIndex,
-            animationSpec = spring(dampingRatio = 0.78f, stiffness = 480f),
-            label = "pui-seg-offset"
-        )
+        // 用 Animatable 而不是 animateDpAsState：松手时要从手指停的位置接着弹，
+        // animateDpAsState 会先跳回旧位置再动画，看着就是「闪一下」
+        val pos = remember { Animatable(selectedIndex.toFloat()) }
+        LaunchedEffect(dragFraction, selectedIndex) {
+            if (dragFraction != null) {
+                pos.snapTo(dragFraction)          // 拖动中：严格跟手，不做插值
+            } else {
+                pos.animateTo(
+                    targetValue = selectedIndex.toFloat(),
+                    animationSpec = spring(dampingRatio = 0.78f, stiffness = 480f)
+                )
+            }
+        }
+        val shownOffset = itemW * pos.value
 
         Box(
             Modifier
-                .offset(x = pad + offset, y = pad)
+                .offset(x = pad + shownOffset, y = pad)
                 .width(itemW)
                 .height(30.dp)
                 .clip(RoundedCornerShape(15.dp))
@@ -683,7 +698,7 @@ fun PuiSearchBar(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "搜索"
+    placeholder: String = PuiLocale.search
 ) {
     val scheme = MaterialTheme.colorScheme
     Row(
@@ -882,9 +897,9 @@ fun PuiSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "搜索应用",
-    /** 聚焦时右侧那个按钮。和 placeholder 一样由调用方给，组件不内置文案。 */
-    cancelText: String = "取消",
+    placeholder: String = PuiLocale.searchApps,
+    /** 聚焦时右侧那个按钮的文案。默认取 [PuiLocale.cancel]，宿主可覆盖。 */
+    cancelText: String = PuiLocale.cancel,
     onSearch: ((String) -> Unit)? = null,
     /** 出图工具用：进页面就带着一段「拖动位移」，方便截果冻拉伸的样子。 */
     initialPull: Offset = Offset.Zero

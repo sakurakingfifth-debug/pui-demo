@@ -99,7 +99,6 @@ val PuiPl = PuiStrings(
         capsuleHeight = "wysokość kapsuły",
         about = "O aplikacji",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM desktop" },
-        aboutBlurNote = "Rozmycie wymaga Androida 13+ (AGSL RuntimeShader). Na starszych wersjach znika tylko górne rozmycie, pozostałe komponenty działają bez zmian."
     ),
     color = ColorStrings(
         title = "Kolory",
@@ -265,7 +264,6 @@ val PuiNl = PuiStrings(
         capsuleHeight = "capsulehoogte",
         about = "Over",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / desktop-JVM" },
-        aboutBlurNote = "Vervaging vereist Android 13+ (AGSL RuntimeShader). Op oudere versies ontbreekt alleen de bovenvervaging; andere componenten blijven werken."
     ),
     color = ColorStrings(
         title = "Kleuren",

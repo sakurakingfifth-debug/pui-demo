@@ -99,7 +99,6 @@ val PuiLa = PuiStrings(
         capsuleHeight = "altitudo capsulae",
         about = "De hac re",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM mensae" },
-        aboutBlurNote = "Turbatio Android 13+ requirit (AGSL RuntimeShader). In versionibus vetustioribus sola turbatio summa deest, ceterae partes integrae manent."
     ),
     color = ColorStrings(
         title = "Colores",
@@ -265,7 +264,6 @@ val PuiTr = PuiStrings(
         capsuleHeight = "kapsül yüksekliği",
         about = "Hakkında",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / masaüstü JVM" },
-        aboutBlurNote = "Bulanıklık Android 13+ gerektirir (AGSL RuntimeShader). Daha eski sürümlerde yalnızca üst bulanıklık kaybolur, diğer bileşenler etkilenmez."
     ),
     color = ColorStrings(
         title = "Renkler",

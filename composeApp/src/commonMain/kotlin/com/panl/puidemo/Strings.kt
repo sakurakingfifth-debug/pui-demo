@@ -129,7 +129,6 @@ class TokensStrings(
     val capsuleHeight: String,
     val about: String,
     val aboutBody: (String) -> String,
-    val aboutBlurNote: String
 )
 
 @Immutable
@@ -224,6 +223,71 @@ class EnumStrings(
     val positionBottom: String
 )
 
+/**
+ * 示例页：对 PUI 安装器首页的复刻（状态卡 + 两个快捷入口 + 功能清单）。
+ *
+ * 单独成类而不是塞进 [ExampleStrings]：原来那套字段是「任务栏客制化」的，
+ * 语义对不上。这里给中文默认值，英文实例覆盖；其余语言先落回中文 ——
+ * 这一页是组件陈列，文案不是重点。
+ */
+@Immutable
+class InstallerStrings(
+    val pageTitle: String,
+    val heroTitle: String,
+    val heroSub: String,
+    val heroBadge: String,
+    val heroToast: String,
+    val pickTitle: String,
+    val pickSub: String,
+    val signTitle: String,
+    val signSub: String,
+    val sectionTitle: String,
+    val sectionSub: String,
+    val beta: String,
+    val advanced: String,
+    val advancedSub: String,
+    val appearance: String,
+    val appearanceSub: String,
+    val installUi: String,
+    val installUiSub: String,
+    val about: String,
+    val aboutSub: String,
+    val footer: String,
+    val aboutBody: String,
+    val aboutConfirm: String,
+    val stubToast: String
+)
+
+/** 示例页（安装器首页复刻）的中文文案，也是其他语言的兜底。 */
+val PuiInstallerZh = InstallerStrings(
+    pageTitle = "演示页面",
+    heroTitle = "系统安装器",
+    heroSub = "已设为默认 · 安装无需二次确认",
+    heroBadge = "默认",
+    heroToast = "这是状态卡：真实应用里点它进设置",
+    pickTitle = "选择安装包",
+    pickSub = "可多选，批量安装",
+    signTitle = "签名检测",
+    signSub = "看看谁签的名",
+    sectionTitle = "功能",
+    sectionSub = "快捷跳转",
+    beta = "Beta 版本",
+    advanced = "进阶功能",
+    advancedSub = "ROOT 及 LSPosed 功能专区",
+    appearance = "外观与导航栏",
+    appearanceSub = "主题、模糊、导航栏",
+    installUi = "安装与界面",
+    installUiSub = "安装策略、界面样式、通知",
+    about = "关于",
+    aboutSub = "版本信息与开源说明",
+    footer = "PUI Installer · 系统安装器重构",
+    aboutBody = "以 AOSP 的 PackageInstaller 为基线重写的安装 / 卸载界面，" +
+        "界面全部由 PUI 设计系统（Compose）实现。\n\n" +
+        "这一页是 Demo 里对安装器首页的复刻：组件、间距、字阶都一样，只是不接真实安装逻辑。",
+    aboutConfirm = "知道了",
+    stubToast = "示例页只陈列样式，不跳转"
+)
+
 // ---------------- 目录 ----------------
 
 @Immutable
@@ -240,7 +304,9 @@ class PuiStrings(
     val common: CommonStrings,
     val enums: EnumStrings,
     /** 语言选择器上的「跟随系统」。 */
-    val languageSystem: String
+    val languageSystem: String,
+    /** 示例页：PUI 安装器首页的复刻。默认走中文，英文实例自己覆盖。 */
+    val installer: InstallerStrings = PuiInstallerZh
 )
 
 val PuiZh = PuiStrings(
@@ -341,7 +407,6 @@ val PuiZh = PuiStrings(
         capsuleHeight = "胶囊高度",
         about = "关于",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / 桌面 JVM" },
-        aboutBlurNote = "模糊链路需要 Android 13+（AGSL RuntimeShader）；低于该版本只少了顶部模糊，其余组件不受影响。"
     ),
     color = ColorStrings(
         title = "颜色",
@@ -506,7 +571,6 @@ val PuiEn = PuiStrings(
         capsuleHeight = "capsule height",
         about = "About",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / desktop JVM" },
-        aboutBlurNote = "The blur pipeline needs Android 13+ (AGSL RuntimeShader). Older versions only lose the top blur — every other component is unaffected."
     ),
     color = ColorStrings(
         title = "Colors",
@@ -570,7 +634,36 @@ val PuiEn = PuiStrings(
         positionCenter = "Center",
         positionBottom = "Bottom"
     ),
-    languageSystem = "System"
+    languageSystem = "System",
+    installer = InstallerStrings(
+        pageTitle = "Demo page",
+        heroTitle = "System installer",
+        heroSub = "Set as default · installs need no confirmation",
+        heroBadge = "Default",
+        heroToast = "Status card — in the real app this opens settings",
+        pickTitle = "Choose APK",
+        pickSub = "Pick one or more, install in batch",
+        signTitle = "Signature check",
+        signSub = "See who signed it",
+        sectionTitle = "Features",
+        sectionSub = "Quick shortcuts",
+        beta = "Beta",
+        advanced = "Advanced",
+        advancedSub = "ROOT & LSPosed features",
+        appearance = "Appearance and navbar",
+        appearanceSub = "Theme, blur, navigation bar",
+        installUi = "Install and UI",
+        installUiSub = "Install policy, UI style, notifications",
+        about = "About",
+        aboutSub = "Version info and open-source notes",
+        footer = "PUI Installer · a rebuilt system installer",
+        aboutBody = "An install / uninstall UI rebuilt on top of AOSP's PackageInstaller, " +
+            "fully implemented with the PUI design system (Compose).\n\n" +
+            "This page recreates the installer's home screen inside the demo: same components, " +
+            "spacing and type scale — only the real install logic is left out.",
+        aboutConfirm = "Got it",
+        stubToast = "This page is a style showcase — nothing navigates"
+    )
 )
 
 /**

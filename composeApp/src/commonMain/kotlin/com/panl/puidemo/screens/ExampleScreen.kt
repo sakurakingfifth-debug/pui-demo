@@ -1,288 +1,322 @@
 package com.panl.puidemo.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.panl.pui.PuiButton
-import com.panl.pui.PuiButtonStyle
-import com.panl.pui.PuiGhostButtonRow
+import com.panl.pui.PuiDialog
 import com.panl.pui.PuiGroup
+import com.panl.pui.PuiHeroCard
 import com.panl.pui.PuiIcon
+import com.panl.pui.PuiIconView
 import com.panl.pui.PuiListRow
-import com.panl.pui.PuiNavContentPadding
-import com.panl.pui.PuiNoticeCard
-import com.panl.pui.PuiNoticeTone
 import com.panl.pui.PuiPageTitle
-import com.panl.pui.PuiRadioRow
+import com.panl.pui.PuiSectionHeader
 import com.panl.pui.PuiSegmentedControl
 import com.panl.pui.PuiSheetPosition
-import com.panl.pui.PuiSliderRow
-import com.panl.pui.PuiSwitchRow
 import com.panl.pui.puiEdgeHaptic
-import com.panl.puidemo.ExampleStrings
 import com.panl.puidemo.InstallStyle
 import com.panl.puidemo.LocalStrings
 import com.panl.puidemo.PuiDemoState
 import com.panl.puidemo.installStyleLabels
-import com.panl.puidemo.rememberPersistedBool
-import com.panl.puidemo.rememberPersistedInt
-import com.panl.puidemo.rememberPuiPrefs
 import com.panl.puidemo.sheetPositionLabels
 
 /**
- * 示例页：一个「真实」的设置页。
+ * 示例页：**PUI 安装器首页的复刻**。
  *
- * 这一页不是组件清单，而是**组合示范** —— 分组怎么排、从属关系怎么置灰、
- * 主次按钮怎么摆。改组件时先看这一页有没有被破坏。
+ * 原来这一页是「任务栏客制化」的假设置页，只为了演示组合效果；现在直接照
+ * 安装器（PUIInstaller）真实首页的骨架铺一遍 ——
+ * 大标题 → 状态卡 → 两个快捷入口 → 「功能」分组 → 页脚，
+ * 组件、间距、字阶都与安装器一致，只是不接真实安装逻辑。
  *
- * @param state 只为「安装应用」那一行服务：浮窗要盖住导航栏，只能在外壳里渲染，
- *   这里只负责把开关打开。
+ * 为什么值得这样改：安装器是这套设计系统第一个真上线的宿主，它的首页
+ * 恰好把 PuiHeroCard / ActionTile / PuiListRow（带小徽标）/ 分组标题都用上了，
+ * 比原来那个虚构页面更能看出「组件在真实业务里长什么样」。
  */
 @Composable
 fun ExampleScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
+    val t = LocalStrings.current.installer
+    val e = LocalStrings.current.example
     val strings = LocalStrings.current
-    val e = strings.example
-    val scroll = rememberScrollState()
+    var showAbout by remember { mutableStateOf(false) }
 
-    // 这一页每个控件都落盘：退出再进还是上次的样子。
-    // 用持久化委托 + remember，写法跟原来的 remember 状态完全一样，下面的代码不用改。
-    val prefs = rememberPuiPrefs()
-    var enabled by rememberPersistedBool(prefs, "ex_enabled", true)
-    var height by rememberPersistedInt(prefs, "ex_height", 56)
-    var iconSize by rememberPersistedInt(prefs, "ex_icon_size", 48)
-    var appearanceOn by rememberPersistedBool(prefs, "ex_appearance", false)
-    var radiusOn by rememberPersistedBool(prefs, "ex_radius_on", false)
-    var radius by rememberPersistedInt(prefs, "ex_radius", 100)
-    var themeMode by rememberPersistedInt(prefs, "ex_theme_mode", 0)
-    var hideHandle by rememberPersistedBool(prefs, "ex_hide_handle", false)
-    var dockGlow by rememberPersistedBool(prefs, "ex_dock_glow", true)
-
-    Column(
-        Modifier
+    LazyColumn(
+        modifier = Modifier
             .fillMaxSize()
-            .puiEdgeHaptic()
-            .verticalScroll(scroll)
-            .padding(start = 16.dp, end = 16.dp, top = topPad + 8.dp, bottom = PuiNavContentPadding),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .puiEdgeHaptic(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = topPad, bottom = 130.dp)
     ) {
-        PuiPageTitle(e.title)
+        item {
+            PuiPageTitle(t.pageTitle)
+            // 标题下不再挂副标题，只留一点呼吸空间
+            Spacer(Modifier.height(14.dp))
+        }
 
-        PuiNoticeCard(
-            title = e.noticeTitle,
-            text = e.noticeText,
-            icon = PuiIcon.Info,
-            tone = PuiNoticeTone.Info
+        item {
+            PuiHeroCard(
+                title = t.heroTitle,
+                subtitle = t.heroSub,
+                badge = t.heroBadge,
+                icon = PuiIcon.Download,
+                onClick = { onToast(t.heroToast) }
+            )
+        }
+
+        item {
+            Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ActionTile(
+                    icon = PuiIcon.Folder,
+                    title = t.pickTitle,
+                    subtitle = t.pickSub,
+                    modifier = Modifier.weight(1f)
+                ) { state.sheetOpen = true }
+
+                ActionTile(
+                    icon = PuiIcon.Check,
+                    title = t.signTitle,
+                    subtitle = t.signSub,
+                    modifier = Modifier.weight(1f)
+                ) { onToast(t.stubToast) }
+            }
+        }
+
+        item {
+            Spacer(Modifier.height(22.dp))
+            PuiSectionHeader(title = t.sectionTitle, subtitle = t.sectionSub)
+        }
+
+        item {
+            PuiGroup(title = null) {
+                PuiListRow(
+                    icon = PuiIcon.Settings,
+                    title = t.advanced,
+                    subtitle = t.advancedSub,
+                    titleBadge = { BetaBadge(t.beta) },
+                    showDivider = true,
+                    showChevron = true,
+                    onClick = { onToast(t.stubToast) }
+                )
+                PuiListRow(
+                    icon = PuiIcon.Palette,
+                    title = t.appearance,
+                    subtitle = t.appearanceSub,
+                    showDivider = true,
+                    showChevron = true,
+                    onClick = { onToast(t.stubToast) }
+                )
+                PuiListRow(
+                    icon = PuiIcon.Edit,
+                    title = t.installUi,
+                    subtitle = t.installUiSub,
+                    showDivider = true,
+                    showChevron = true,
+                    onClick = { onToast(t.stubToast) }
+                )
+                PuiListRow(
+                    icon = PuiIcon.Info,
+                    title = t.about,
+                    subtitle = t.aboutSub,
+                    showDivider = false,
+                    showChevron = true,
+                    onClick = { showAbout = true }
+                )
+            }
+        }
+
+        item {
+            Spacer(Modifier.height(16.dp))
+            Text(
+                t.footer,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+
+        // 安装流程的入口：安装器那边「选择安装包」之后就是这个浮窗，
+        // 这里保留下来，顺带把「形态 / 落点」两个开关也留在同一张卡里。
+        item {
+            Spacer(Modifier.height(22.dp))
+            PuiSectionHeader(title = e.groupInstall)
+        }
+        item {
+            PuiGroup(title = null) {
+                PuiListRow(
+                    icon = PuiIcon.Phone,
+                    title = e.installApp,
+                    subtitle = installFormLabel(state, strings.enums),
+                    trailingText = e.open,
+                    showDivider = true,
+                    onClick = { state.sheetOpen = true }
+                )
+                Column(Modifier.padding(16.dp)) {
+                    Text(
+                        e.defaultStyle,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    PuiSegmentedControl(
+                        items = installStyleLabels(strings.enums),
+                        selectedIndex = state.installStyle.ordinal,
+                        onSelect = { state.installStyle = InstallStyle.entries[it] }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        when (state.installStyle) {
+                            InstallStyle.Sheet -> e.sheetHint
+                            InstallStyle.FullScreen -> e.fullHint
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(Modifier.height(20.dp))
+
+                    // 只有浮窗才有「落点」这一说；全屏时整块置灰，和开关行的置灰语义一致
+                    val posEnabled = state.installStyle == InstallStyle.Sheet
+                    val posDim = if (posEnabled) 1f else 0.45f
+                    Text(
+                        e.sheetPosition,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.alpha(posDim)
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    PuiSegmentedControl(
+                        items = sheetPositionLabels(strings.enums),
+                        selectedIndex = state.sheetPosition.ordinal,
+                        onSelect = { state.sheetPosition = PuiSheetPosition.entries[it] },
+                        enabled = posEnabled
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        e.positionHint,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = posDim)
+                    )
+                }
+            }
+        }
+    }
+
+    if (showAbout) {
+        PuiDialog(
+            title = t.about,
+            text = t.aboutBody,
+            confirmText = t.aboutConfirm,
+            showCancel = false,
+            onDismiss = { showAbout = false },
+            onConfirm = { showAbout = false }
         )
-
-        PuiGroup(e.groupSize) {
-            PuiSwitchRow(
-                icon = PuiIcon.PaletteRound,
-                title = e.customSize,
-                subtitle = e.customSizeSub,
-                checked = enabled,
-                onChange = { enabled = it },
-                showDivider = true
-            )
-            PuiSliderRow(
-                icon = PuiIcon.PaletteRound,
-                label = e.height,
-                value = height,
-                enabled = enabled,
-                min = 20,
-                max = 100,
-                suffix = "dp",
-                showDivider = true
-            ) { height = it }
-            PuiSliderRow(
-                icon = PuiIcon.RulerPen,
-                label = e.iconSize,
-                value = iconSize,
-                enabled = enabled,
-                min = 20,
-                max = 100,
-                suffix = "dp",
-                showDivider = true
-            ) { iconSize = it }
-            PuiListRow(
-                icon = PuiIcon.Brush4,
-                title = e.touchPad,
-                subtitle = e.touchPadSub,
-                trailingText = e.auto,
-                showDivider = false,
-                enabled = enabled,
-                onClick = { onToast(e.touchPadToast) }
-            )
-        }
-
-        // 三级从属：根开关 → 子开关 → 子滑块
-        PuiGroup(e.groupAppearance) {
-            PuiSwitchRow(
-                icon = PuiIcon.Edit,
-                title = e.customRadius,
-                subtitle = e.customRadiusSub,
-                checked = appearanceOn,
-                onChange = { appearanceOn = it },
-                showDivider = true
-            )
-            PuiSwitchRow(
-                icon = PuiIcon.Edit,
-                title = e.enableRadius,
-                subtitle = e.enableRadiusSub,
-                checked = radiusOn,
-                onChange = { radiusOn = it },
-                showDivider = true,
-                enabled = appearanceOn
-            )
-            PuiSliderRow(
-                icon = null,
-                label = e.radiusAmount,
-                value = radius,
-                enabled = appearanceOn && radiusOn,
-                min = 50,
-                max = 100,
-                suffix = "%",
-                showDivider = true
-            ) { radius = it }
-            PuiRadioRow(
-                title = e.followSystem,
-                subtitle = e.followSystemSub,
-                selected = themeMode == 0,
-                onClick = { themeMode = 0 },
-                showDivider = true
-            )
-            PuiRadioRow(
-                title = e.alwaysDark,
-                selected = themeMode == 1,
-                onClick = { themeMode = 1 },
-                showDivider = false
-            )
-        }
-
-        PuiGroup(e.groupOther) {
-            PuiSwitchRow(
-                icon = PuiIcon.Split,
-                title = e.hideHandle,
-                subtitle = e.hideHandleSub,
-                checked = hideHandle,
-                onChange = { hideHandle = it },
-                showDivider = true
-            )
-            PuiSwitchRow(
-                icon = PuiIcon.Glow,
-                title = e.dockGlow,
-                subtitle = e.dockGlowSub,
-                checked = dockGlow,
-                onChange = { dockGlow = it },
-                showDivider = false
-            )
-        }
-
-        // 安装面板：入口 + 形态设置放在同一张卡里。
-        // 形态开关跟着「安装」走，而不是散在设置页 —— 调它就是为了看上面这一行打开的样子。
-        PuiGroup(e.groupInstall) {
-            PuiListRow(
-                icon = PuiIcon.Phone,
-                title = e.installApp,
-                subtitle = installFormLabel(state, e),
-                trailingText = e.open,
-                showDivider = true,
-                onClick = { state.sheetOpen = true }
-            )
-            Column(Modifier.padding(16.dp)) {
-                Text(
-                    e.defaultStyle,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(Modifier.height(10.dp))
-                PuiSegmentedControl(
-                    items = installStyleLabels(strings.enums),
-                    selectedIndex = state.installStyle.ordinal,
-                    onSelect = { state.installStyle = InstallStyle.entries[it] }
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    when (state.installStyle) {
-                        InstallStyle.Sheet -> e.sheetHint
-                        InstallStyle.FullScreen -> e.fullHint
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                // 只有浮窗才有「落点」这一说；全屏时整块置灰，和开关行的置灰语义一致
-                val posEnabled = state.installStyle == InstallStyle.Sheet
-                val posDim = if (posEnabled) 1f else 0.45f
-                Text(
-                    e.sheetPosition,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.alpha(posDim)
-                )
-                Spacer(Modifier.height(10.dp))
-                PuiSegmentedControl(
-                    items = sheetPositionLabels(strings.enums),
-                    selectedIndex = state.sheetPosition.ordinal,
-                    onSelect = { state.sheetPosition = PuiSheetPosition.entries[it] },
-                    enabled = posEnabled
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    e.positionHint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = posDim)
-                )
-            }
-        }
-
-        PuiGroup(e.groupActions) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                PuiButton(
-                    e.saveRestart,
-                    onClick = { onToast(e.saveRestartToast) },
-                    modifier = Modifier.fillMaxWidth(),
-                    style = PuiButtonStyle.Filled
-                )
-                PuiButton(
-                    e.saveOnly,
-                    onClick = { onToast(e.savedToast) },
-                    modifier = Modifier.fillMaxWidth(),
-                    style = PuiButtonStyle.Tonal
-                )
-                PuiGhostButtonRow(
-                    items = listOf(e.reset, e.forceStop),
-                    onClick = { index -> onToast(if (index == 0) e.resetToast else e.forceStopToast) }
-                )
-            }
-        }
     }
 }
 
-/** 当前安装形态的一句话描述，给「安装应用」那一行做副标题。 */
-private fun installFormLabel(state: PuiDemoState, e: ExampleStrings): String = when (state.installStyle) {
-    InstallStyle.Sheet -> when (state.sheetPosition) {
-        PuiSheetPosition.Center -> e.formCenter
-        PuiSheetPosition.Bottom -> e.formBottom
+/**
+ * 快捷入口方块：38dp 圆角图标底 + 标题 + 两行说明。
+ *
+ * 和安装器里的 `ActionTile` 同一套尺寸；那边图标来自 drawable 资源，
+ * 这边用 [PuiIcon] 枚举，所以不需要 painter 参数。
+ */
+@Composable
+private fun ActionTile(
+    icon: PuiIcon,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        modifier
+            .clip(MaterialTheme.shapes.large)
+            .background(scheme.surfaceContainerLowest)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onClick() }
+            .padding(14.dp)
+    ) {
+        Box(
+            Modifier
+                .size(38.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(scheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            PuiIconView(icon, Modifier.size(20.dp), tint = scheme.onPrimaryContainer)
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMedium,
+            color = scheme.onSurface,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = scheme.onSurfaceVariant,
+            maxLines = 2
+        )
     }
-    InstallStyle.FullScreen -> e.formFull
+}
+
+/** 标题右侧的 Beta 标签：描边小胶囊。安装器里那颗还带个小旗子图标，这里只用文字。 */
+@Composable
+private fun BetaBadge(text: String) {
+    val scheme = MaterialTheme.colorScheme
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, scheme.outlineVariant, RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelLarge,
+            color = scheme.onSurfaceVariant
+        )
+    }
+}
+
+/** 「安装应用」那行的副标题：说明按哪种形态安装。 */
+private fun installFormLabel(
+    state: PuiDemoState,
+    en: com.panl.puidemo.EnumStrings
+): String = when (state.installStyle) {
+    InstallStyle.Sheet -> when (state.sheetPosition) {
+        PuiSheetPosition.Center -> en.positionCenter
+        PuiSheetPosition.Bottom -> en.positionBottom
+    }
+    InstallStyle.FullScreen -> en.installFull
 }

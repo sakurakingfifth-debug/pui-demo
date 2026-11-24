@@ -158,12 +158,17 @@ fun PuiDivider(startIndent: Dp = 54.dp) {
 @Composable
 fun PuiSwitchRow(
     icon: PuiIcon?,
+    iconPainter: androidx.compose.ui.graphics.painter.Painter? = null,
     title: String,
     subtitle: String,
     checked: Boolean,
     onChange: (Boolean) -> Unit,
     showDivider: Boolean,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    /** 标题**下方**的小徽标（高危这类）。放在标题右边会把标题挤断行，所以单起一行。 */
+    titleBadge: (@Composable () -> Unit)? = null,
+    /** 标题**右边**的小徽标（Beta 这类短标签）。标题过长会省略，不会挤断。 */
+    titleInlineBadge: (@Composable () -> Unit)? = null
 ) {
     val dim = if (enabled) 1f else 0.45f
     Column {
@@ -173,16 +178,36 @@ fun PuiSwitchRow(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (icon != null) {
+            if (iconPainter != null) {
+                androidx.compose.foundation.Image(
+                    painter = iconPainter,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp).alpha(dim),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                        LocalWallpaperAccent.current.takeIf { it != Color.Unspecified }
+                            ?: MaterialTheme.colorScheme.primary
+                    )
+                )
+                Spacer(Modifier.width(14.dp))
+            } else if (icon != null) {
                 PuiRowIcon(icon, Modifier.alpha(dim))
                 Spacer(Modifier.width(14.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = dim)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = dim),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (titleInlineBadge != null) {
+                        Spacer(Modifier.width(8.dp))
+                        titleInlineBadge()
+                    }
+                }
                 if (subtitle.isNotEmpty()) {
                     Spacer(Modifier.height(2.dp))
                     Text(
@@ -191,11 +216,16 @@ fun PuiSwitchRow(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = dim)
                     )
                 }
+                if (titleBadge != null) {
+                    Spacer(Modifier.height(6.dp))
+                    titleBadge()
+                }
             }
             Spacer(Modifier.width(12.dp))
             PuiSwitch(checked = checked, onChange = onChange, enabled = enabled)
         }
-        if (showDivider) PuiDivider(if (icon == null) 16.dp else 54.dp)
+        // 分隔线缩进跟着图标走：用 painter 画官方 SVG 的行也有图标，不能只认 icon
+        if (showDivider) PuiDivider(if (icon == null && iconPainter == null) 16.dp else 54.dp)
     }
 }
 
@@ -209,6 +239,8 @@ fun PuiSwitchRow(
 @Composable
 fun PuiSliderRow(
     icon: PuiIcon?,
+    /** 官方 SVG 图标（和 [PuiSwitchRow] 同一套画法），传了就不看 [icon]。 */
+    iconPainter: androidx.compose.ui.graphics.painter.Painter? = null,
     label: String,
     value: Int,
     enabled: Boolean,
@@ -216,6 +248,10 @@ fun PuiSliderRow(
     max: Int,
     suffix: String,
     showDivider: Boolean,
+    /** 标题下面那行小字，不传就只有标题。 */
+    subtitle: String = "",
+    /** 自定义右上角显示的数值文案，不传就是「数值 + 单位」。 */
+    valueText: ((Int) -> String)? = null,
     step: Int = 10,
     onChange: (Int) -> Unit
 ) {
@@ -230,18 +266,37 @@ fun PuiSliderRow(
     Column {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.alpha(dim)) {
-                if (icon != null) {
+                if (iconPainter != null) {
+                    androidx.compose.foundation.Image(
+                        painter = iconPainter,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            LocalWallpaperAccent.current.takeIf { it != Color.Unspecified }
+                                ?: MaterialTheme.colorScheme.primary
+                        )
+                    )
+                    Spacer(Modifier.width(14.dp))
+                } else if (icon != null) {
                     PuiRowIcon(icon)
                     Spacer(Modifier.width(14.dp))
                 }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (subtitle.isNotBlank()) {
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 Text(
-                    label,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    "$value $suffix",
+                    valueText?.invoke(value) ?: "$value $suffix",
                     style = MaterialTheme.typography.titleMedium,
                     color = accent
                 )
@@ -260,7 +315,8 @@ fun PuiSliderRow(
                     .alpha(dim)
             )
         }
-        if (showDivider) PuiDivider(if (icon == null) 16.dp else 54.dp)
+        // 分隔线缩进跟着图标走：用 painter 画官方 SVG 的行也有图标，不能只认 icon
+        if (showDivider) PuiDivider(if (icon == null && iconPainter == null) 16.dp else 54.dp)
     }
 }
 
@@ -272,10 +328,17 @@ fun PuiSliderRow(
 @Composable
 fun PuiListRow(
     icon: PuiIcon?,
-    /** 自定义行首图形。给了就盖过 [icon] —— 用来放字母/字符徽章这类图标集里没有的东西。 */
+    /** 自定义图标（矢量 / 图片）。传了它就不画 [icon]，着色与 [PuiIcon] 一致。 */
+    iconPainter: androidx.compose.ui.graphics.painter.Painter? = null,
+    /**
+     * 自定义行首图形。优先级最高，给了就盖过 [icon] / [iconPainter] ——
+     * 用来放字母/字符徽章这类图标集里没有的东西（语言页的「文」徽章）。
+     */
     leading: (@Composable () -> Unit)? = null,
     title: String,
     subtitle: String = "",
+    /** 标题右侧的小徽标（例如 Beta 标签）。不传就没有。 */
+    titleBadge: (@Composable () -> Unit)? = null,
     showDivider: Boolean = true,
     enabled: Boolean = true,
     trailingText: String? = null,
@@ -301,18 +364,36 @@ fun PuiListRow(
             if (leading != null) {
                 Box(Modifier.alpha(dim)) { leading() }
                 Spacer(Modifier.width(14.dp))
+            } else if (iconPainter != null) {
+                androidx.compose.foundation.Image(
+                    painter = iconPainter,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp).alpha(dim),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                        LocalWallpaperAccent.current.takeIf { it != Color.Unspecified }
+                            ?: MaterialTheme.colorScheme.primary
+                    )
+                )
+                Spacer(Modifier.width(14.dp))
             } else if (icon != null) {
                 PuiRowIcon(icon, Modifier.alpha(dim))
                 Spacer(Modifier.width(14.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = scheme.onSurface.copy(alpha = dim),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = scheme.onSurface.copy(alpha = dim),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (titleBadge != null) {
+                        Spacer(Modifier.width(8.dp))
+                        titleBadge()
+                    }
+                }
                 if (subtitle.isNotEmpty()) {
                     Spacer(Modifier.height(2.dp))
                     Text(
@@ -345,7 +426,8 @@ fun PuiListRow(
                 )
             }
         }
-        if (showDivider) PuiDivider(if (icon == null) 16.dp else 54.dp)
+        // 分隔线缩进跟着图标走：用 painter 画官方 SVG 的行也有图标，不能只认 icon
+        if (showDivider) PuiDivider(if (icon == null && iconPainter == null && leading == null) 16.dp else 54.dp)
     }
 }
 
@@ -396,6 +478,7 @@ fun PuiRadioRow(
             Spacer(Modifier.width(12.dp))
             PuiRadioDot(selected = selected, onClick = onClick, enabled = enabled)
         }
+        // 分隔线缩进跟着图标走：用 painter 画官方 SVG 的行也有图标，不能只认 icon
         if (showDivider) PuiDivider(if (icon == null) 16.dp else 54.dp)
     }
 }
@@ -447,6 +530,7 @@ fun PuiCheckRow(
             Spacer(Modifier.width(12.dp))
             PuiCheckbox(checked = checked, onChange = onChange, enabled = enabled)
         }
+        // 分隔线缩进跟着图标走：用 painter 画官方 SVG 的行也有图标，不能只认 icon
         if (showDivider) PuiDivider(if (icon == null) 16.dp else 54.dp)
     }
 }

@@ -99,7 +99,6 @@ val PuiFr = PuiStrings(
         capsuleHeight = "hauteur de la capsule",
         about = "À propos",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM bureau" },
-        aboutBlurNote = "Le flou nécessite Android 13+ (AGSL RuntimeShader). Sur les versions antérieures, seul le flou du haut disparaît ; les autres composants ne sont pas affectés."
     ),
     color = ColorStrings(
         title = "Couleurs",
@@ -265,7 +264,6 @@ val PuiEs = PuiStrings(
         capsuleHeight = "altura de la cápsula",
         about = "Acerca de",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM de escritorio" },
-        aboutBlurNote = "El desenfoque requiere Android 13+ (AGSL RuntimeShader). En versiones anteriores solo se pierde el desenfoque superior; el resto de componentes no se ve afectado."
     ),
     color = ColorStrings(
         title = "Colores",

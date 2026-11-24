@@ -99,7 +99,6 @@ val PuiDa = PuiStrings(
         capsuleHeight = "kapselhøjde",
         about = "Om",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / desktop-JVM" },
-        aboutBlurNote = "Sløring kræver Android 13+ (AGSL RuntimeShader). På ældre versioner mangler kun sløringen i toppen; øvrige komponenter påvirkes ikke."
     ),
     color = ColorStrings(
         title = "Farver",
@@ -265,7 +264,6 @@ val PuiNb = PuiStrings(
         capsuleHeight = "kapselhøyde",
         about = "Om",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / desktop-JVM" },
-        aboutBlurNote = "Sløring krever Android 13+ (AGSL RuntimeShader). På eldre versjoner mangler bare sløringen øverst; andre komponenter påvirkes ikke."
     ),
     color = ColorStrings(
         title = "Farger",

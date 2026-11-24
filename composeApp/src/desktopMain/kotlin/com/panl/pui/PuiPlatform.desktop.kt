@@ -57,3 +57,7 @@ actual fun Modifier.puiRealtimeBlur(progress: () -> Float, maxRadius: Dp): Modif
 
 @Composable
 actual fun PuiSystemBarsAppearance(darkTheme: Boolean) = Unit
+
+/** 桌面侧没有窗口遮罩 / gravity 这一套，Dialog 由 Compose 自己摆。 */
+@Composable
+actual fun PuiDialogWindowEffect(scrim: Boolean, bottomAligned: Boolean) = Unit

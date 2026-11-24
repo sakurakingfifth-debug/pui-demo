@@ -99,7 +99,6 @@ val PuiRu = PuiStrings(
         capsuleHeight = "высота капсулы",
         about = "О приложении",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM для ПК" },
-        aboutBlurNote = "Для размытия нужен Android 13+ (AGSL RuntimeShader). На более старых версиях пропадает только верхнее размытие, остальные компоненты не затрагиваются."
     ),
     color = ColorStrings(
         title = "Цвета",
@@ -265,7 +264,6 @@ val PuiPt = PuiStrings(
         capsuleHeight = "altura da cápsula",
         about = "Sobre",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM desktop" },
-        aboutBlurNote = "O desfoque exige Android 13+ (AGSL RuntimeShader). Em versões anteriores só o desfoque superior desaparece; os demais componentes não são afetados."
     ),
     color = ColorStrings(
         title = "Cores",

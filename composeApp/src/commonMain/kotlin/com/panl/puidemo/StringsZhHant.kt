@@ -106,7 +106,6 @@ val PuiZhTw = PuiStrings(
         capsuleHeight = "膠囊高度",
         about = "關於",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / 桌面 JVM" },
-        aboutBlurNote = "模糊鏈路需要 Android 13+（AGSL RuntimeShader）；低於該版本只少了頂部模糊，其餘元件不受影響。"
     ),
     color = ColorStrings(
         title = "顏色",
@@ -271,7 +270,6 @@ val PuiZhHk = PuiStrings(
         capsuleHeight = "膠囊高度",
         about = "關於",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / 桌面 JVM" },
-        aboutBlurNote = "模糊鏈路需要 Android 13+（AGSL RuntimeShader）；低於該版本只少了頂部模糊，其餘組件不受影響。"
     ),
     color = ColorStrings(
         title = "顏色",

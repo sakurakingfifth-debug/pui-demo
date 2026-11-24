@@ -99,7 +99,6 @@ val PuiJa = PuiStrings(
         capsuleHeight = "カプセルの高さ",
         about = "このアプリについて",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / デスクトップ JVM" },
-        aboutBlurNote = "ぼかしには Android 13 以降（AGSL RuntimeShader）が必要です。それ以前では上部のぼかしだけが省略され、他のコンポーネントは影響を受けません。"
     ),
     color = ColorStrings(
         title = "カラー",

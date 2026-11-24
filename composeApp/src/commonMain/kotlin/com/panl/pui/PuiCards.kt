@@ -98,6 +98,8 @@ fun PuiNoticeCard(
     text: String,
     modifier: Modifier = Modifier,
     icon: PuiIcon = PuiIcon.Info,
+    /** 自定义图标（矢量 / 图片），传了就不画 [icon]。 */
+    iconPainter: androidx.compose.ui.graphics.painter.Painter? = null,
     tone: PuiNoticeTone = PuiNoticeTone.Info,
     action: (@Composable () -> Unit)? = null
 ) {
@@ -122,7 +124,16 @@ fun PuiNoticeCard(
             .padding(16.dp),
         verticalAlignment = Alignment.Top
     ) {
-        PuiIconView(icon, Modifier.size(20.dp), tint = onContainer)
+        if (iconPainter != null) {
+            androidx.compose.foundation.Image(
+                painter = iconPainter,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(onContainer)
+            )
+        } else {
+            PuiIconView(icon, Modifier.size(20.dp), tint = onContainer)
+        }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
@@ -275,6 +286,8 @@ fun PuiHeroCard(
     modifier: Modifier = Modifier,
     badge: String? = null,
     icon: PuiIcon? = null,
+    /** 自定义图标（矢量 / 图片），传了就不画 [icon]。 */
+    iconPainter: androidx.compose.ui.graphics.painter.Painter? = null,
     onClick: (() -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -346,7 +359,16 @@ fun PuiHeroCard(
                     color = scheme.onPrimary,
                     modifier = Modifier.weight(1f)
                 )
-                if (icon != null) {
+                if (iconPainter != null) {
+                    androidx.compose.foundation.Image(
+                        painter = iconPainter,
+                        contentDescription = null,
+                        modifier = Modifier.size(26.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            scheme.onPrimary.copy(alpha = 0.9f)
+                        )
+                    )
+                } else if (icon != null) {
                     PuiIconView(icon, Modifier.size(26.dp), tint = scheme.onPrimary.copy(alpha = 0.9f))
                 }
             }

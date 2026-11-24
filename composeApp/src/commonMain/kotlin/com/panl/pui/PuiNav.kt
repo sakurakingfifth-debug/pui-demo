@@ -250,6 +250,11 @@ fun PuiFloatingNavBar(
     /** 每个 Tab 的图标；不传就按索引兜底。 */
     icons: List<PuiIcon> = emptyList(),
     /**
+     * 自定义图标槽：传了就不用 [icons]。
+     * 给的是 (下标, 当前着色)，调用方可以塞 ImageVector / 矢量资源，不再受 [PuiIcon] 枚举限制。
+     */
+    iconContent: (@Composable (index: Int, tint: Color) -> Unit)? = null,
+    /**
      * 玻璃底色不透明度倍率，0f = 全透明、1f = 预设值。
      * 只作用于填充色，模糊和描边 / 投影不受影响。
      */
@@ -577,13 +582,17 @@ fun PuiFloatingNavBar(
                         verticalArrangement = Arrangement.Center,
                     ) {
                         // ColorOS 17 风格：图标在上、文字在下
-                        PuiIconView(
-                            icon = icons.getOrElse(i) {
-                                if (i == 0) PuiIcon.Element else PuiIcon.Brush
-                            },
-                            tint = color,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        if (iconContent != null) {
+                            iconContent(i, color)
+                        } else {
+                            PuiIconView(
+                                icon = icons.getOrElse(i) {
+                                    if (i == 0) PuiIcon.Element else PuiIcon.Brush
+                                },
+                                tint = color,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                         Spacer(Modifier.height(2.dp))
                         Text(text = label, color = color, fontSize = 11.sp)
                     }

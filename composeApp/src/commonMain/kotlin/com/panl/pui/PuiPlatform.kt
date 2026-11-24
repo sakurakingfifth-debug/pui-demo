@@ -83,3 +83,17 @@ expect fun Modifier.puiRealtimeBlur(progress: () -> Float, maxRadius: Dp = 24.dp
 
 /** 让状态栏 / 导航栏图标跟随 App 内的深浅色（桌面无系统栏，空实现）。 */@Composable
 expect fun PuiSystemBarsAppearance(darkTheme: Boolean)
+
+/**
+ * 对话框窗口调参：遮罩强度（[scrim]）与贴底对齐（[bottomAligned]）。
+ *
+ * 放进平台层是因为两端的 `Dialog` 不是一套东西：Android 拿到的是
+ * `DialogWindowProvider.window`，可以改 `FLAG_DIM_BEHIND` 和 gravity；
+ * 桌面侧的 Dialog 没有这些概念，只能空实现。
+ *
+ * Android 侧有个坑：只 `setDimAmount` 是没用的 —— 主题里 `backgroundDimEnabled=false`
+ * 时窗口根本没带 `FLAG_DIM_BEHIND`，dimAmount 会被忽略，表现就是弹窗和身后的浮窗
+ * 糊成一张卡。所以这里显式 add/clear。
+ */
+@Composable
+expect fun PuiDialogWindowEffect(scrim: Boolean, bottomAligned: Boolean)

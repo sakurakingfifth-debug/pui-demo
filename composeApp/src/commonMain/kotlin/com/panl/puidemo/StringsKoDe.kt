@@ -99,7 +99,6 @@ val PuiKo = PuiStrings(
         capsuleHeight = "캡슐 높이",
         about = "정보",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / 데스크톱 JVM" },
-        aboutBlurNote = "흐림에는 Android 13 이상(AGSL RuntimeShader)이 필요합니다. 그 이전 버전에서는 상단 흐림만 빠지고 다른 컴포넌트는 영향받지 않습니다."
     ),
     color = ColorStrings(
         title = "색상",
@@ -265,7 +264,6 @@ val PuiDe = PuiStrings(
         capsuleHeight = "Kapselhöhe",
         about = "Über",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / Desktop-JVM" },
-        aboutBlurNote = "Die Weichzeichnung benötigt Android 13+ (AGSL RuntimeShader). Ältere Versionen verlieren nur die obere Weichzeichnung, alle anderen Komponenten bleiben unberührt."
     ),
     color = ColorStrings(
         title = "Farben",

@@ -6,7 +6,9 @@ import android.content.ContextWrapper
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.os.Build
+import android.view.Gravity
 import android.view.HapticFeedbackConstants
+import android.view.WindowManager
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
@@ -22,6 +24,8 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.core.view.WindowCompat
@@ -262,4 +266,24 @@ private fun Context.findActivity(): Activity? {
         ctx = ctx.baseContext
     }
     return null
+}
+
+@Composable
+actual fun PuiDialogWindowEffect(scrim: Boolean, bottomAligned: Boolean) {
+    val view = LocalView.current
+    SideEffect {
+        runCatching {
+            val window = (view.parent as? DialogWindowProvider)?.window ?: return@runCatching
+            if (scrim) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+                window.setDimAmount(0.32f)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+                window.setDimAmount(0f)
+            }
+            window.setGravity(
+                if (bottomAligned) Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL else Gravity.CENTER
+            )
+        }
+    }
 }

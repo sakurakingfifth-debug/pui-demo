@@ -99,7 +99,6 @@ val PuiIt = PuiStrings(
         capsuleHeight = "altezza capsula",
         about = "Informazioni",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM desktop" },
-        aboutBlurNote = "La sfocatura richiede Android 13+ (AGSL RuntimeShader). Sulle versioni precedenti manca solo la sfocatura superiore, gli altri componenti non sono interessati."
     ),
     color = ColorStrings(
         title = "Colori",
@@ -265,7 +264,6 @@ val PuiUk = PuiStrings(
         capsuleHeight = "висота капсули",
         about = "Про застосунок",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM для ПК" },
-        aboutBlurNote = "Для розмиття потрібен Android 13+ (AGSL RuntimeShader). На старіших версіях зникає лише верхнє розмиття, інші компоненти не страждають."
     ),
     color = ColorStrings(
         title = "Кольори",

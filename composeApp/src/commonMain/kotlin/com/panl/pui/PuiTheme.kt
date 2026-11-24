@@ -68,7 +68,7 @@ val LocalWallpaperAccent = staticCompositionLocalOf { Color.Unspecified }
  */
 val PuiTypography = Typography(
     displaySmall = TextStyle(
-        fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 36.sp, letterSpacing = 0.sp
+        fontWeight = FontWeight.Bold, fontSize = 32.sp, lineHeight = 40.sp, letterSpacing = 0.sp
     ),
     headlineLarge = TextStyle(
         fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 32.sp

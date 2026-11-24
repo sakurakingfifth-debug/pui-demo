@@ -99,7 +99,6 @@ val PuiVi = PuiStrings(
         capsuleHeight = "chiều cao viên",
         about = "Giới thiệu",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM máy tính" },
-        aboutBlurNote = "Làm mờ cần Android 13+ (AGSL RuntimeShader). Trên bản cũ chỉ mất phần làm mờ phía trên, các thành phần khác không bị ảnh hưởng."
     ),
     color = ColorStrings(
         title = "Màu sắc",
@@ -265,7 +264,6 @@ val PuiAr = PuiStrings(
         capsuleHeight = "ارتفاع الكبسولة",
         about = "حول",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / JVM سطح المكتب" },
-        aboutBlurNote = "التمويه يحتاج Android 13+ (AGSL RuntimeShader). في الإصدارات الأقدم يغيب التمويه العلوي فقط، ولا تتأثر بقية المكوّنات."
     ),
     color = ColorStrings(
         title = "الألوان",
@@ -431,7 +429,6 @@ val PuiHi = PuiStrings(
         capsuleHeight = "कैप्सूल की ऊँचाई",
         about = "परिचय",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / डेस्कटॉप JVM" },
-        aboutBlurNote = "धुँधलेपन के लिए Android 13+ चाहिए (AGSL RuntimeShader)। पुराने संस्करणों में केवल ऊपरी धुँधलापन नहीं मिलता, बाकी घटक अप्रभावित रहते हैं।"
     ),
     color = ColorStrings(
         title = "रंग",
