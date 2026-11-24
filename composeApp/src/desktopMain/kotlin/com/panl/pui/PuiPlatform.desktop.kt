@@ -6,6 +6,10 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 
 /*
  * 桌面侧（Compose Desktop）的 PUI 平台实现。
@@ -66,4 +70,25 @@ actual fun PuiDialogWindowEffect(scrim: Boolean, bottomAligned: Boolean) = Unit
 @Composable
 actual fun rememberUrlOpener(): (String) -> Unit = { url: String ->
     runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
+}
+
+actual suspend fun fetchLatestReleaseTag(repo: String): String? = withContext(Dispatchers.IO) {
+    runCatching {
+        val conn = (URL("https://api.github.com/repos/$repo/releases/latest")
+            .openConnection() as HttpURLConnection).apply {
+            connectTimeout = 8000
+            readTimeout = 8000
+            setRequestProperty("Accept", "application/vnd.github+json")
+        }
+        try {
+            if (conn.responseCode !in 200..299) {
+                null
+            } else {
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                Regex("\"tag_name\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+            }
+        } finally {
+            conn.disconnect()
+        }
+    }.getOrNull()
 }

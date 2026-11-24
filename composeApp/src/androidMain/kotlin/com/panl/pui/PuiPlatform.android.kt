@@ -28,6 +28,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.core.view.WindowCompat
@@ -303,4 +307,25 @@ actual fun rememberUrlOpener(): (String) -> Unit {
             }
         }
     }
+}
+
+actual suspend fun fetchLatestReleaseTag(repo: String): String? = withContext(Dispatchers.IO) {
+    runCatching {
+        val conn = (URL("https://api.github.com/repos/$repo/releases/latest")
+            .openConnection() as HttpURLConnection).apply {
+            connectTimeout = 8000
+            readTimeout = 8000
+            setRequestProperty("Accept", "application/vnd.github+json")
+        }
+        try {
+            if (conn.responseCode !in 200..299) {
+                null
+            } else {
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                Regex("\"tag_name\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+            }
+        } finally {
+            conn.disconnect()
+        }
+    }.getOrNull()
 }

@@ -129,6 +129,14 @@ class TokensStrings(
     val capsuleHeight: String,
     val about: String,
     val aboutBody: (String) -> String,
+    /** 软件更新入口（只在设置页用；默认中文，英文实例覆盖，其余语言先回落）。 */
+    val updateTitle: String = "软件更新",
+    val updateChecking: String = "正在检查更新…",
+    val updateLatest: String = "已是最新版本",
+    val updateFailed: String = "检查失败，点按重试",
+    val updateFound: String = "发现新版本",
+    val updateGo: String = "去下载",
+    val updateOk: String = "知道了",
 )
 
 @Immutable
@@ -571,6 +579,13 @@ val PuiEn = PuiStrings(
         capsuleHeight = "capsule height",
         about = "About",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / desktop JVM" },
+        updateTitle = "Software update",
+        updateChecking = "Checking for updates…",
+        updateLatest = "You're up to date",
+        updateFailed = "Check failed, tap to retry",
+        updateFound = "New version",
+        updateGo = "Download",
+        updateOk = "Got it",
     ),
     color = ColorStrings(
         title = "Colors",

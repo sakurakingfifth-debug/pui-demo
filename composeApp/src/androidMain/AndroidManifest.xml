@@ -9,6 +9,9 @@
     <!-- 安装进度走通知栏：13+ 是运行时权限，首次点「安装」时申请 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- 设置页「软件更新」要查 GitHub 的 latest release；只有这一处联网 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".PuiDemoApp"
         android:allowBackup="true"

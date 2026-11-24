@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,7 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.panl.pui.LocalWallpaperAccent
 import com.panl.pui.PuiCard
+import com.panl.pui.PuiDialog
 import com.panl.pui.PuiGroup
+import com.panl.pui.fetchLatestReleaseTag
 import com.panl.pui.rememberUrlOpener
 import com.panl.pui.PuiListRow
 import androidx.compose.ui.layout.boundsInRoot
@@ -65,7 +68,9 @@ import com.panl.puidemo.LocalStrings
 import com.panl.puidemo.PuiDemoState
 import com.panl.puidemo.displayName
 import com.panl.puidemo.ThemeMode
+import com.panl.puidemo.TokensStrings
 import com.panl.puidemo.themeModeLabels
+import kotlinx.coroutines.launch
 
 /**
  * 令牌页：主题开关 + 全部设计令牌。
@@ -81,6 +86,25 @@ fun TokensScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
     val s = LocalStrings.current
     val t = s.tokens
     val openUrl = rememberUrlOpener()
+    val scope = rememberCoroutineScope()
+    var checking by remember { mutableStateOf(false) }
+    var update by remember { mutableStateOf<UpdateCheck?>(null) }
+
+    fun checkUpdate() {
+        if (checking) return
+        checking = true
+        scope.launch {
+            val tag = fetchLatestReleaseTag(GITHUB_REPO)
+            update = when {
+                tag == null -> UpdateCheck.Failed
+                // 比版本号大小，不只看相等：本地手搓的包常常比线上最新 Release 还新，
+                // 那种情况必须显示「已是最新」，不能倒过来说「发现新版本 1.0.119」
+                isNewer(tag, AppInfo.VERSION) -> UpdateCheck.Found(tag)
+                else -> UpdateCheck.Latest
+            }
+            checking = false
+        }
+    }
 
     Column(
         Modifier
@@ -245,10 +269,38 @@ fun TokensScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
                 icon = null,
                 leading = { GitHubMark() },
                 title = "GitHub",
-                subtitle = "sakurakingfifth-debug/pui-demo",
-                showDivider = false,
+                subtitle = GITHUB_REPO,
+                showDivider = true,
                 showChevron = true,
                 onClick = { openUrl(GITHUB_URL) }
+            )
+            PuiListRow(
+                icon = PuiIcon.Download,
+                title = t.updateTitle,
+                subtitle = updateSubtitle(t, checking, update),
+                showDivider = false,
+                showChevron = true,
+                onClick = { checkUpdate() }
+            )
+        }
+
+        // 检查结果：有新版本给「去下载」，否则只给「知道了」
+        update?.let { r ->
+            val found = r as? UpdateCheck.Found
+            PuiDialog(
+                title = t.updateTitle,
+                text = when (r) {
+                    is UpdateCheck.Found -> "v${AppInfo.VERSION} → ${r.tag}"
+                    UpdateCheck.Latest -> "${t.updateLatest}\n\nv${AppInfo.VERSION}"
+                    UpdateCheck.Failed -> "${t.updateFailed}\n\nv${AppInfo.VERSION}"
+                },
+                confirmText = if (found != null) t.updateGo else t.updateOk,
+                showCancel = found != null,
+                onDismiss = { update = null },
+                onConfirm = {
+                    if (found != null) openUrl(RELEASES_URL)
+                    update = null
+                }
             )
         }
 
@@ -315,7 +367,11 @@ private fun TextTokenRow(name: String, value: String, usage: String, last: Boole
 }
 
 /** 本 APK 的源码仓库。 */
-private const val GITHUB_URL = "https://github.com/sakurakingfifth-debug/pui-demo"
+private const val GITHUB_REPO = "sakurakingfifth-debug/pui-demo"
+
+private const val GITHUB_URL = "https://github.com/$GITHUB_REPO"
+
+private const val RELEASES_URL = "https://github.com/$GITHUB_REPO/releases/latest"
 
 /** GitHub 的 octocat 标记（Simple Icons 的 24 网格路径）。 */
 private const val GITHUB_MARK =
@@ -334,4 +390,33 @@ private fun GitHubMark() {
         val k = size.minDimension / 24f
         scale(k, pivot = Offset.Zero) { drawPath(path, accent) }
     }
+}
+
+/** 版本检查的三种结果。 */
+private sealed interface UpdateCheck {
+    data class Found(val tag: String) : UpdateCheck
+    data object Latest : UpdateCheck
+    data object Failed : UpdateCheck
+}
+
+/** 更新入口的副标题：检查中 / 未检查 / 已是最新 / 发现新版本 / 失败。 */
+private fun updateSubtitle(t: TokensStrings, checking: Boolean, result: UpdateCheck?): String = when {
+    checking -> t.updateChecking
+    result == null -> "v${AppInfo.VERSION}"
+    result is UpdateCheck.Latest -> "${t.updateLatest} · v${AppInfo.VERSION}"
+    result is UpdateCheck.Found -> "${t.updateFound} ${result.tag}"
+    else -> t.updateFailed
+}
+
+/** `1.0.10 > 1.0.9` 这种按段比的版本比较；缺的段按 0 算。 */
+private fun isNewer(latest: String, current: String): Boolean {
+    fun parts(v: String) = v.removePrefix("v").trim().split('.').mapNotNull { it.toIntOrNull() }
+    val a = parts(latest)
+    val b = parts(current)
+    for (i in 0 until maxOf(a.size, b.size)) {
+        val x = a.getOrElse(i) { 0 }
+        val y = b.getOrElse(i) { 0 }
+        if (x != y) return x > y
+    }
+    return false
 }
