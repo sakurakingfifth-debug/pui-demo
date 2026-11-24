@@ -21,6 +21,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,9 +32,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.panl.pui.PuiBottomFade
@@ -66,6 +72,9 @@ private const val UPDATE_REPO_URL = "https://github.com/$UPDATE_REPO"
  */
 @Composable
 fun UpdateScreen(
+    /** 「软件更新」那一行的矩形：页面从它展开，也缩回它。 */
+    origin: Rect,
+    progress: Animatable<Float, AnimationVector1D>,
     onClose: () -> Unit,
     topBlur: Boolean,
     topBlurRadius: Dp
@@ -77,6 +86,7 @@ fun UpdateScreen(
     val blurH = rememberPuiTopBlurHeight()
     val openUrl = rememberUrlOpener()
     val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
 
     var checking by remember { mutableStateOf(false) }
     var checked by remember { mutableStateOf(false) }
@@ -106,8 +116,42 @@ fun UpdateScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .background(scheme.background)
+            .graphicsLayer {
+                val p = progress.value.coerceIn(0f, 1f)
+                if (p >= 0.999f || origin.width <= 0f) {
+                    // 展开完成后别再裁：整屏圆角矩形的抗锯齿裁剪在 Skia 里会退化成
+                    // 一层全屏遮罩，滚动时每帧白花几毫秒（和语言页同一条结论）
+                    clip = false
+                } else {
+                    val hz = (p / 0.3f).coerceIn(0f, 1f)
+                    // 圆角前 70% 保持 20dp、后 30% 收到 0，否则展开到一半就成直角
+                    val k = ((1f - p) / 0.3f).coerceIn(0f, 1f)
+                    val radiusPx = 20f * (k * k * (3f - 2f * k)) * density.density
+                    clip = true
+                    shape = WindowShape(
+                        Rect(
+                            lerp(origin.left, 0f, hz),
+                            lerp(origin.top, 0f, p),
+                            lerp(origin.right, size.width, hz),
+                            lerp(origin.bottom, size.height, p)
+                        ),
+                        radiusPx
+                    )
+                }
+            }
     ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val p = progress.value.coerceIn(0f, 1f)
+                    translationY = lerp(origin.top, 0f, p)
+                    // 前 28% 淡入：p=0 时还是底下那一行
+                    val f = (p / 0.28f).coerceIn(0f, 1f)
+                    alpha = f * f * (3f - 2f * f)
+                }
+                .background(scheme.background)
+        ) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -209,6 +253,7 @@ fun UpdateScreen(
             ) {
                 GitHubMark(size = 24.dp, tint = scheme.onSurface)
             }
+        }
         }
     }
 }

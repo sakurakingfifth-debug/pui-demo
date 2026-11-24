@@ -249,14 +249,17 @@ fun TokensScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
                 showChevron = true,
                 onClick = { openUrl(GITHUB_URL) }
             )
-            PuiListRow(
-                icon = PuiIcon.Download,
-                title = s.update.title,
-                subtitle = "v${AppInfo.VERSION}",
-                showDivider = false,
-                showChevron = true,
-                onClick = { state.updatePageOpen = true }
-            )
+            // 包一层只为量位置：更新页要从这一行「长」出来
+            Box(Modifier.onGloballyPositioned { state.updateRowRect = it.boundsInRoot() }) {
+                PuiListRow(
+                    icon = PuiIcon.Download,
+                    title = s.update.title,
+                    subtitle = "v${AppInfo.VERSION}",
+                    showDivider = false,
+                    showChevron = true,
+                    onClick = { state.updatePageOpen = true }
+                )
+            }
         }
 
 

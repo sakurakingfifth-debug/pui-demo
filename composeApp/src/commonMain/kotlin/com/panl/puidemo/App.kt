@@ -156,19 +156,19 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
             state.languagePageOpen = false
         }
     }
-    // 更新页的进场：往上浮一点 + 淡入，退场反向
+    // 更新页的展开进度：和语言页同一套「从被点的矩形长到全屏」
     val updateProgress = remember { Animatable(0f) }
     LaunchedEffect(state.updatePageOpen) {
         if (state.updatePageOpen) {
             updateProgress.snapTo(0f)
-            updateProgress.animateTo(1f, tween(durationMillis = 260, easing = FastOutSlowInEasing))
+            updateProgress.animateTo(1f, tween(durationMillis = 420, easing = FastOutSlowInEasing))
         }
     }
 
     fun closeUpdatePage() {
         if (!state.updatePageOpen) return
         scope.launch {
-            updateProgress.animateTo(0f, tween(durationMillis = 200, easing = FastOutLinearInEasing))
+            updateProgress.animateTo(0f, tween(durationMillis = 300, easing = FastOutLinearInEasing))
             state.updatePageOpen = false
         }
     }
@@ -395,23 +395,15 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
             )
         }
 
-        // 更新页：独立子页，盖在导航栏之上
+        // 更新页：设置里的子页面，盖在导航栏之上（和语言页同一层级、同一套展开动画）
         if (state.updatePageOpen) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        val p = updateProgress.value.coerceIn(0f, 1f)
-                        alpha = p
-                        translationY = (1f - p) * 40.dp.toPx()
-                    }
-            ) {
-                UpdateScreen(
-                    onClose = { closeUpdatePage() },
-                    topBlur = state.blurEnabled,
-                    topBlurRadius = (state.topBlurPx / density).dp
-                )
-            }
+            UpdateScreen(
+                origin = state.updateRowRect,
+                progress = updateProgress,
+                onClose = { closeUpdatePage() },
+                topBlur = state.blurEnabled,
+                topBlurRadius = (state.topBlurPx / density).dp
+            )
         }
 
         // 轻提示：进场「从下往上浮 + 淡入 + 轻微放大」，退场反向。
@@ -515,6 +507,9 @@ internal fun sheetBackdropBlur(progress: Float): Float =
 
     /** 更新页是否打开。同样只是 UI 状态。 */
     var updatePageOpen by mutableStateOf(false)
+
+    /** 「软件更新」那一行在根坐标里的矩形，更新页从它展开、也缩回它。 */
+    var updateRowRect by mutableStateOf(Rect.Zero)
 
     /** 「语言」那一行在根坐标里的矩形，语言页从它展开、也缩回它。 */
     var languageRowRect by mutableStateOf(Rect.Zero)

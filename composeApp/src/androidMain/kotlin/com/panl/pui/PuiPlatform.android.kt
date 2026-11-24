@@ -316,9 +316,19 @@ actual suspend fun fetchLatestRelease(repo: String): PuiRelease? = withContext(D
             connectTimeout = 8000
             readTimeout = 8000
             setRequestProperty("Accept", "application/vnd.github+json")
+            // GitHub 要求带 UA；部分网络/代理也会拒掉默认的 Dalvik UA
+            setRequestProperty("User-Agent", "PUIDemo/${com.panl.puidemo.AppInfo.VERSION}")
         }
         try {
-            if (conn.responseCode !in 200..299) {
+            val code = runCatching { conn.responseCode }.getOrDefault(-1)
+            if (code !in 200..299) {
+                // 最常见的失败是匿名限流（60 次/小时/IP），把服务端原话留一行，方便分辨
+                android.util.Log.w(
+                    "PuiUpdate",
+                    "HTTP $code: " + runCatching {
+                        conn.errorStream?.bufferedReader()?.use { it.readText() }?.take(200)
+                    }.getOrNull()
+                )
                 null
             } else {
                 val body = conn.inputStream.bufferedReader().use { it.readText() }
@@ -340,5 +350,7 @@ actual suspend fun fetchLatestRelease(repo: String): PuiRelease? = withContext(D
         } finally {
             conn.disconnect()
         }
+    }.onFailure {
+        android.util.Log.w("PuiUpdate", "fetchLatestRelease 失败", it)
     }.getOrNull()
 }
