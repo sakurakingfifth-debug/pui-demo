@@ -240,18 +240,14 @@ fun UpdateScreen(
                 filled = true,
                 onClick = { refresh() }
             ) {
-                PuiIconView(
-                    PuiIcon.Download,
-                    Modifier.size(24.dp),
-                    tint = scheme.onPrimary
-                )
+                UpdateMark(sizeDp = 24.dp, tint = scheme.onPrimary)
             }
             CircleAction(
                 label = t.github,
                 filled = false,
                 onClick = { openUrl(UPDATE_REPO_URL) }
             ) {
-                GitHubMark(size = 24.dp, tint = scheme.onSurface)
+                GitHubMark(sizeDp = 24.dp, tint = scheme.onSurface)
             }
         }
         }

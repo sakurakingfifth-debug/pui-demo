@@ -252,7 +252,8 @@ fun TokensScreen(topPad: Dp, state: PuiDemoState, onToast: (String) -> Unit) {
             // 包一层只为量位置：更新页要从这一行「长」出来
             Box(Modifier.onGloballyPositioned { state.updateRowRect = it.boundsInRoot() }) {
                 PuiListRow(
-                    icon = PuiIcon.Download,
+                    icon = null,
+                    leading = { UpdateMark() },
                     title = s.update.title,
                     subtitle = "v${AppInfo.VERSION}",
                     showDivider = false,
