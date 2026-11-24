@@ -607,6 +607,31 @@ fun PuiFloatingNavBar(
 fun rememberPuiTopBlurHeight(extra: Dp = 64.dp): Dp = rememberStatusBarHeight() + extra
 
 /**
+ * 底部渐隐遮罩：[PuiTopFade] 的镜像 —— 从完全透明渐变到 [color]，贴在底部。
+ *
+ * 用来让滚动内容在底部操作区（圆形按钮那一排）之前自然淡出，
+ * 而不是在某个硬边上被切断。
+ */
+@Composable
+fun BoxScope.PuiBottomFade(
+    height: Dp,
+    color: Color = MaterialTheme.colorScheme.surface,
+    bottomAlpha: Float = 0.92f
+) {
+    Box(
+        Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .height(height)
+            .background(
+                Brush.verticalGradient(
+                    listOf(color.copy(alpha = 0f), color.copy(alpha = bottomAlpha))
+                )
+            )
+    )
+}
+
+/**
  * 顶部渐隐遮罩：从 [color]（默认 surface）的 [topAlpha] 渐变到完全透明，与模糊区域等高。
  * 放在页面根 Box 里、滚动内容**之后**、导航栏**之前**。
  *

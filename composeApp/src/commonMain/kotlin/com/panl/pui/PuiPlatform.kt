@@ -107,10 +107,13 @@ expect fun PuiDialogWindowEffect(scrim: Boolean, bottomAligned: Boolean)
 @Composable
 expect fun rememberUrlOpener(): (String) -> Unit
 
+/** GitHub 上的一条 Release：版本 tag + 更新说明（可能为空）。 */
+data class PuiRelease(val tag: String, val notes: String)
+
 /**
- * 取 GitHub 上最新 Release 的 tag（形如 `v1.0.120`），失败返回 null。
+ * 取 GitHub 上最新的 Release，失败返回 null。
  *
- * 只读 `tag_name`，不解析整份 JSON —— 一条正则就够，避免为一次版本检查引入
+ * 只读 `tag_name` 和 `body` 两个字段，正则抠出来就够 —— 避免为一次版本检查引入
  * 序列化库。未认证的 GitHub API 每小时 60 次，单机自用完全够。
  */
-expect suspend fun fetchLatestReleaseTag(repo: String): String?
+expect suspend fun fetchLatestRelease(repo: String): PuiRelease?

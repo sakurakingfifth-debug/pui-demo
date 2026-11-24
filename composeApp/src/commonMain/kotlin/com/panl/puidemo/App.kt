@@ -65,6 +65,7 @@ import com.panl.puidemo.screens.GalleryScreen
 import com.panl.puidemo.screens.IconSetDetail
 import com.panl.puidemo.screens.LanguageScreen
 import com.panl.puidemo.screens.TokensScreen
+import com.panl.puidemo.screens.UpdateScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -155,6 +156,23 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
             state.languagePageOpen = false
         }
     }
+    // 更新页的进场：往上浮一点 + 淡入，退场反向
+    val updateProgress = remember { Animatable(0f) }
+    LaunchedEffect(state.updatePageOpen) {
+        if (state.updatePageOpen) {
+            updateProgress.snapTo(0f)
+            updateProgress.animateTo(1f, tween(durationMillis = 260, easing = FastOutSlowInEasing))
+        }
+    }
+
+    fun closeUpdatePage() {
+        if (!state.updatePageOpen) return
+        scope.launch {
+            updateProgress.animateTo(0f, tween(durationMillis = 200, easing = FastOutLinearInEasing))
+            state.updatePageOpen = false
+        }
+    }
+
     var iconClosing by remember { mutableStateOf(false) }
 
     // 底部浮窗的进场进度。同样放在外壳：浮窗只盖住屏幕下半截，
@@ -377,6 +395,25 @@ private fun PuiDemoShell(state: PuiDemoState, initialPage: Int) {
             )
         }
 
+        // 更新页：独立子页，盖在导航栏之上
+        if (state.updatePageOpen) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        val p = updateProgress.value.coerceIn(0f, 1f)
+                        alpha = p
+                        translationY = (1f - p) * 40.dp.toPx()
+                    }
+            ) {
+                UpdateScreen(
+                    onClose = { closeUpdatePage() },
+                    topBlur = state.blurEnabled,
+                    topBlurRadius = (state.topBlurPx / density).dp
+                )
+            }
+        }
+
         // 轻提示：进场「从下往上浮 + 淡入 + 轻微放大」，退场反向。
         // 退出动画期间 toast 已经是 null，所以文案要留一份 lastToast，否则退场瞬间字先没了。
         var lastToast by remember { mutableStateOf("") }
@@ -475,6 +512,9 @@ internal fun sheetBackdropBlur(progress: Float): Float =
 
     /** 语言页是否打开。纯 UI 状态，不落盘。 */
     var languagePageOpen by mutableStateOf(false)
+
+    /** 更新页是否打开。同样只是 UI 状态。 */
+    var updatePageOpen by mutableStateOf(false)
 
     /** 「语言」那一行在根坐标里的矩形，语言页从它展开、也缩回它。 */
     var languageRowRect by mutableStateOf(Rect.Zero)

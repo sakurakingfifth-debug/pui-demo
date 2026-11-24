@@ -129,14 +129,6 @@ class TokensStrings(
     val capsuleHeight: String,
     val about: String,
     val aboutBody: (String) -> String,
-    /** 软件更新入口（只在设置页用；默认中文，英文实例覆盖，其余语言先回落）。 */
-    val updateTitle: String = "软件更新",
-    val updateChecking: String = "正在检查更新…",
-    val updateLatest: String = "已是最新版本",
-    val updateFailed: String = "检查失败，点按重试",
-    val updateFound: String = "发现新版本",
-    val updateGo: String = "去下载",
-    val updateOk: String = "知道了",
 )
 
 @Immutable
@@ -232,6 +224,48 @@ class EnumStrings(
 )
 
 /**
+ * 更新页（软件更新）的文案。
+ *
+ * 和 [InstallerStrings] 一样给中文默认值、英文实例覆盖：这一页是设置里的子页，
+ * 其余 23 种语言暂时落回中文，比为一页 OTA 文案铺 23 份更划算。
+ */
+@Immutable
+class UpdateStrings(
+    val title: String,
+    val currentVersion: String,
+    val latestVersion: String,
+    val statusLabel: String,
+    val statusIdle: String,
+    val statusChecking: String,
+    val statusLatest: String,
+    val statusFound: String,
+    val statusFailed: String,
+    val notesTitle: String,
+    val notesEmpty: String,
+    val checkNow: String,
+    val github: String,
+    val unknown: String
+)
+
+/** 更新页中文文案，也是其他语言的兜底。 */
+val PuiUpdateZh = UpdateStrings(
+    title = "软件更新",
+    currentVersion = "当前版本",
+    latestVersion = "最新版本",
+    statusLabel = "状态",
+    statusIdle = "未检查",
+    statusChecking = "正在检查…",
+    statusLatest = "已是最新",
+    statusFound = "有可用更新",
+    statusFailed = "检查失败",
+    notesTitle = "更新日志",
+    notesEmpty = "这个版本没有单独的更新说明",
+    checkNow = "检查更新",
+    github = "GitHub",
+    unknown = "—"
+)
+
+/**
  * 示例页：对 PUI 安装器首页的复刻（状态卡 + 两个快捷入口 + 功能清单）。
  *
  * 单独成类而不是塞进 [ExampleStrings]：原来那套字段是「任务栏客制化」的，
@@ -314,7 +348,9 @@ class PuiStrings(
     /** 语言选择器上的「跟随系统」。 */
     val languageSystem: String,
     /** 示例页：PUI 安装器首页的复刻。默认走中文，英文实例自己覆盖。 */
-    val installer: InstallerStrings = PuiInstallerZh
+    val installer: InstallerStrings = PuiInstallerZh,
+    /** 更新页文案。同样默认中文。 */
+    val update: UpdateStrings = PuiUpdateZh
 )
 
 val PuiZh = PuiStrings(
@@ -579,13 +615,7 @@ val PuiEn = PuiStrings(
         capsuleHeight = "capsule height",
         about = "About",
         aboutBody = { "PUI Demo · $it\nCompose Multiplatform 1.9 · Kotlin 2.2\nAndroid minSdk 24 / desktop JVM" },
-        updateTitle = "Software update",
-        updateChecking = "Checking for updates…",
-        updateLatest = "You're up to date",
-        updateFailed = "Check failed, tap to retry",
-        updateFound = "New version",
-        updateGo = "Download",
-        updateOk = "Got it",
+
     ),
     color = ColorStrings(
         title = "Colors",
@@ -678,6 +708,22 @@ val PuiEn = PuiStrings(
             "spacing and type scale — only the real install logic is left out.",
         aboutConfirm = "Got it",
         stubToast = "This page is a style showcase — nothing navigates"
+    ),
+    update = UpdateStrings(
+        title = "Software update",
+        currentVersion = "Current version",
+        latestVersion = "Latest version",
+        statusLabel = "Status",
+        statusIdle = "Not checked",
+        statusChecking = "Checking…",
+        statusLatest = "Up to date",
+        statusFound = "Update available",
+        statusFailed = "Check failed",
+        notesTitle = "Release notes",
+        notesEmpty = "This release has no notes",
+        checkNow = "Check",
+        github = "GitHub",
+        unknown = "—"
     )
 )
 

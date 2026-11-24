@@ -72,7 +72,7 @@ actual fun rememberUrlOpener(): (String) -> Unit = { url: String ->
     runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
 }
 
-actual suspend fun fetchLatestReleaseTag(repo: String): String? = withContext(Dispatchers.IO) {
+actual suspend fun fetchLatestRelease(repo: String): PuiRelease? = withContext(Dispatchers.IO) {
     runCatching {
         val conn = (URL("https://api.github.com/repos/$repo/releases/latest")
             .openConnection() as HttpURLConnection).apply {
@@ -85,7 +85,20 @@ actual suspend fun fetchLatestReleaseTag(repo: String): String? = withContext(Di
                 null
             } else {
                 val body = conn.inputStream.bufferedReader().use { it.readText() }
-                Regex("\"tag_name\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                val tag = Regex("\"tag_name\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                if (tag == null) {
+                    null
+                } else {
+                    // body 是 JSON 字符串，换行和引号都是转义过的
+                    val notes = Regex("\"body\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"").find(body)
+                        ?.groupValues?.get(1)
+                        ?.replace("\\r\\n", "\n")
+                        ?.replace("\\n", "\n")
+                        ?.replace("\\\"", "\"")
+                        ?.replace("\\\\", "\\")
+                        .orEmpty()
+                    PuiRelease(tag, notes)
+                }
             }
         } finally {
             conn.disconnect()
