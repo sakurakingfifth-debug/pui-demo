@@ -80,13 +80,16 @@ jobs:
           TAG="v$VERSION"
           APK="PUIDemo-$VERSION.apk"
           cp composeApp/build/outputs/apk/debug/composeApp-debug.apk "$APK"
+          # 说明写在仓库根的 RELEASE_NOTES.md 里：--generate-notes 对直接提交
+          # （没有 PR）只会生成一行 Full Changelog，等于没写
           if gh release view "$TAG" > /dev/null 2>&1; then
-            echo "已有 $TAG，替换附件"
+            echo "已有 $TAG，替换附件并更新说明"
             gh release upload "$TAG" "$APK" --clobber
+            gh release edit "$TAG" --notes-file RELEASE_NOTES.md
           else
             gh release create "$TAG" "$APK" \
               --title "PUI Demo $VERSION" \
-              --generate-notes
+              --notes-file RELEASE_NOTES.md
           fi
           gh release view "$TAG" --json url,assets \
             --jq '"Release: " + .url + "  附件: " + ([.assets[].name] | join(", "))'
